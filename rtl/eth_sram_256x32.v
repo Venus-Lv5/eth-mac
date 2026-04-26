@@ -1,4 +1,4 @@
-`timescale 1ps/1ns
+`timescale 1ns/1ps
 
 module eth_sram_256x32 (
    input wire       i_clk,
