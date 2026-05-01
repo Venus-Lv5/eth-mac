@@ -10,7 +10,7 @@ module eth_db_ram (
    input wire [3:0]  i_ahb_be,                     //byte enable
    input wire [7:0]  i_ahb_addr,                   //address
    input wire [31:0] i_ahb_wdata,                  //write data
-   output reg [31:0] o_ahb_rdata;                 //read data
+   output reg [31:0] o_ahb_rdata,                 //read data
    output reg        o_ahb_ack,                    // 
 
    // TX request
@@ -84,7 +84,7 @@ module eth_db_ram (
       .i_addr(r_addr),
       .i_din(r_din),
       .o_dout(w_dout)
-   )
+   );
 
    // Capture TX request
    always @(posedge i_clk or negedge i_rst_n) begin
@@ -200,7 +200,7 @@ module eth_db_ram (
       if (!i_rst_n) begin
          o_ahb_rdata       <= 32'h0;
          o_tx_rdata        <= 32'h0;
-         o_rx_rdata        <= 32'h0;         
+         o_rx_rdata        <= 32'h0;
       end
       else begin
          if (r_ahb_state_q && !i_ahb_wr && i_ahb_req)

@@ -8,7 +8,7 @@ module eth_sram_256x32 (
    input wire [7:0] i_addr,
    input wire [31:0] i_din,
    output reg [31:0] o_dout
-)
+);
 
    reg [31:0] mem [255:0];
    
