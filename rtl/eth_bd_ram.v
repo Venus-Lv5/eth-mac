@@ -1,37 +1,38 @@
 `timescale 1ns/1ps
 
-module eth_db_ram (
+module eth_bd_ram #(
+   parameter integer TX_BD_NUM = 64,
+   parameter integer RX_BD_NUM = 64
+) (
    input wire        i_clk,
    input wire        i_rst_n,
 
-    //  AHB request
-   input wire        i_ahb_req,                    //host request
-   input wire        i_ahb_wr,                     //write or read
-   input wire [3:0]  i_ahb_be,                     //byte enable
-   input wire [7:0]  i_ahb_addr,                   //address
-   input wire [31:0] i_ahb_wdata,                  //write data
-   output reg [31:0] o_ahb_rdata,                 //read data
-   output reg        o_ahb_ack,                    // 
+   // AHB Slave request
+   input wire        i_ahb_req,
+   input wire        i_ahb_wr,
+   input wire [3:0]  i_ahb_be,
+   input wire [9:0]  i_ahb_addr,
+   input wire [31:0] i_ahb_wdata,
+   output wire [31:0] o_ahb_rdata,
+   output reg         o_ahb_ack,
 
-   // TX request
-   input wire        i_txe_en,                     //enable tx dma engine
-   input wire        i_tx_db_rd,                   //tx db read (word0)
-   input wire        i_tx_ptr_rd,                  //tx ptr read (word 1)
-   input wire        i_tx_stt_wr,                  //tx status write
-   input wire        i_tx_wrap,                    //wrap to next TX BD
-   input wire [31:0] i_tx_wdata,                   //TX write data
-   output reg [31:0] o_tx_rdata,                  //TX read data
-   output reg [5:0]  o_tx_index,                   //Current TX decriptor 
+   // TX DMA request
+   input wire        i_txe_en,
+   input wire        i_tx_db_rd,
+   input wire        i_tx_ptr_rd,
+   input wire        i_tx_stt_wr,
+   input wire        i_tx_wrap,
+   input wire [31:0] i_tx_wdata,
+   output wire [31:0] o_tx_rdata,
 
-   //RX request
-   input wire        i_rxe_en,                     //enable rx dma engine
-   input wire        i_rx_db_rd,                   //rx db read (word0)
-   input wire        i_rx_ptr_rd,                  //rx ptr read (word1)
-   input wire        i_rx_stt_wr,                  //rx status write
-   input wire        i_rx_wrap,                    //wrap to next RX DB
-   input wire [31:0] i_rx_wdata,                   //RX write data
-   output reg [31:0] o_rx_rdata,                  //RX read data
-   output reg [5:0]  o_rx_index                    //Current RX decriptor
+   // RX DMA request
+   input wire        i_rxe_en,
+   input wire        i_rx_db_rd,
+   input wire        i_rx_ptr_rd,
+   input wire        i_rx_stt_wr,
+   input wire        i_rx_wrap,
+   input wire [31:0] i_rx_wdata,
+   output wire [31:0] o_rx_rdata
 );
 
    // Request
@@ -54,26 +55,30 @@ module eth_db_ram (
    reg         r_rd;
    wire [31:0] w_dout;
 
+   // BD indices (managed internally)
+   reg [5:0]  r_tx_index;
+   reg [5:0]  r_rx_index;
+
    // State
-   reg r_state, r_state_q;
+   reg [1:0] r_state;
+   reg [1:0] r_state_q;
 
    localparam SRC_AHB   = 2'd0;
    localparam SRC_TX    = 2'd1;
-   localparam SRC_RX    = 2'd2; 
+   localparam SRC_RX    = 2'd2;
+
+   // AHB address range: 0x400-0x7FF
+   // Internally mapped to 0x00-0xFF
+   wire [7:0] w_ahb_ram_addr = i_ahb_addr[9:2]; 
 
    // Decriptor word address mapping
-   // TX: 0x00 - 0x7F
-   // RX: 0x80 - 0xFF
-   // Each DB 2 word
-   wire [7:0] w_tx_word0_addr;
-   wire [7:0] w_tx_word1_addr;
-   wire [7:0] w_rx_word0_addr;
-   wire [7:0] w_rx_word1_addr;
-
-   assign w_tx_word0_addr = {1'b0, o_tx_index, 1'b0};
-   assign w_tx_word1_addr = {1'b0, o_tx_index, 1'b1};
-   assign w_rx_word0_addr = {1'b1, o_rx_index, 1'b0};
-   assign w_rx_word1_addr = {1'b1, o_rx_index, 1'b1};
+   // TX: indices 0..63, addresses 0x00-0x7F
+   // RX: indices 0..63, addresses 0x80-0xFF
+   // Each DB = 2 words (word0 = control, word1 = pointer)
+   wire [7:0] w_tx_word0_addr = {1'b0, r_tx_index, 1'b0};
+   wire [7:0] w_tx_word1_addr = {1'b0, r_tx_index, 1'b1};
+   wire [7:0] w_rx_word0_addr = {1'b1, r_rx_index, 1'b0};
+   wire [7:0] w_rx_word1_addr = {1'b1, r_rx_index, 1'b1};
 
    // SRAM instance
    eth_sram_256x32 u_db_ram(
@@ -152,7 +157,7 @@ module eth_db_ram (
 
             if (i_rx_stt_wr) begin
                r_addr   <= w_rx_word0_addr;
-               r_din    <= i_rx_db_rd;
+               r_din    <= i_rx_wdata;
                r_wr     <= 4'hF;
             end
             else if (i_rx_ptr_rd) begin
@@ -170,9 +175,9 @@ module eth_db_ram (
             r_rx_state     <= 1'b0;
             r_state        <= SRC_AHB;
 
-            r_addr         <= i_ahb_addr;
+            r_addr         <= w_ahb_ram_addr;
             r_din          <= i_ahb_wdata;
-            r_wr           <= (i_ahb_req && i_ahb_wr)? i_ahb_be : 4'h0;
+            r_wr           <= (i_ahb_req && i_ahb_wr) ? i_ahb_be : 4'h0;
             r_rd           <= (i_ahb_req && !i_ahb_wr);
          end
       end
@@ -196,51 +201,73 @@ module eth_db_ram (
    end
 
    // Return read data to the correct requester
+   // RAM has 1-cycle latency: address driven in cycle N, data valid in cycle N+1
+   // r_state_q tracks which source was granted access in the previous cycle
    always @(posedge i_clk or negedge i_rst_n) begin
       if (!i_rst_n) begin
-         o_ahb_rdata       <= 32'h0;
-         o_tx_rdata        <= 32'h0;
-         o_rx_rdata        <= 32'h0;
-      end
-      else begin
-         if (r_ahb_state_q && !i_ahb_wr && i_ahb_req)
-            o_ahb_rdata    <= w_dout;
-         if (r_state_q == SRC_TX && r_tx_state_q && !i_tx_stt_wr)
-            o_tx_rdata     <= w_dout;
-         if (r_state_q == SRC_RX && r_rx_state_q && !i_rx_stt_wr)
-            o_rx_rdata     <= w_dout;
+         o_ahb_rdata <= 32'h0;
+      end else begin
+         if (r_state_q == SRC_AHB && !i_ahb_wr)
+            o_ahb_rdata <= w_dout;
       end
    end
 
-   //Assert ack when host stage was served in previous cycle
+   // TX DMA sees valid BD data in cycle AFTER o_tx_db_rd / o_tx_ptr_rd is asserted
+   // because of 1-cycle RAM read latency
+   always @(posedge i_clk or negedge i_rst_n) begin
+      if (!i_rst_n) begin
+         o_tx_rdata <= 32'h0;
+      end else begin
+         if (r_state_q == SRC_TX && !i_tx_stt_wr)
+            o_tx_rdata <= w_dout;
+      end
+   end
+
+   always @(posedge i_clk or negedge i_rst_n) begin
+      if (!i_rst_n) begin
+         o_rx_rdata <= 32'h0;
+      end else begin
+         if (r_state_q == SRC_RX && !i_rx_stt_wr)
+            o_rx_rdata <= w_dout;
+      end
+   end
+
+   // Assert ack when host AHB transaction was served in previous cycle
    always @(posedge i_clk or negedge i_rst_n) begin
       if (!i_rst_n)
          o_ahb_ack   <= 1'b0;
-      else 
+      else
          o_ahb_ack   <= r_ahb_state_q && i_ahb_req;
    end
 
    // TX current BD index update
+   // Advances when TX DMA writes status back to BD
+   localparam [5:0] TX_BD_MAX = TX_BD_NUM - 1;
+   localparam [5:0] RX_BD_MAX = RX_BD_NUM - 1;
+
    always @(posedge i_clk or negedge i_rst_n) begin
-      if (!i_rst_n) 
-         o_tx_index     <= 6'h0;
+      if (!i_rst_n)
+         r_tx_index <= 6'd0;
       else if (i_tx_stt_wr) begin
-         if (i_tx_wrap)
-            o_tx_index  <= 6'h0;
+         // Wrap at TX_BD_NUM boundary
+         if (i_tx_wrap || (r_tx_index == TX_BD_MAX))
+            r_tx_index <= 6'd0;
          else
-            o_tx_index  <= o_tx_index + 6'h1;
+            r_tx_index <= r_tx_index + 6'd1;
       end
    end
 
    // RX current BD index update
+   // Wraps at RX_BD_NUM boundary
    always @(posedge i_clk or negedge i_rst_n) begin
-      if (!i_rst_n) 
-         o_rx_index     <= 6'h0;
+      if (!i_rst_n)
+         r_rx_index <= 6'd0;
       else if (i_rx_stt_wr) begin
-         if (i_rx_wrap)
-            o_rx_index  <= 6'h0;
+         if (i_rx_wrap || (r_rx_index == RX_BD_MAX))
+            r_rx_index <= 6'd0;
          else
-            o_rx_index  <= o_rx_index + 6'h1;
+            r_rx_index <= r_rx_index + 6'd1;
       end
    end
+
 endmodule

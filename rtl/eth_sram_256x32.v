@@ -13,18 +13,17 @@ module eth_sram_256x32 (
    reg [31:0] mem [255:0];
    
    always @(posedge i_clk) begin
-      if (ce) begin
-            if (wr[0])
-               mem[i_addr][7:0]        <= i_din[7:0];
-            if (wr[1])
-               mem([i_addr][15:8])     <= i_din[15:8];
-            if (wr[2])
-               mem[i_addr][23:16]      <= i_din[23:16];
-            if (wr[3])
-               mem([i_addr][31:24])    <= i_din[31:24];
-
-               if (i_rd)
-                  o_dout <= mem[i_addr];
+      if (i_ce) begin
+            if (i_wr[0])
+               mem[i_addr][7:0]     <= i_din[7:0];
+            if (i_wr[1])
+               mem[i_addr][15:8]    <= i_din[15:8];
+            if (i_wr[2])
+               mem[i_addr][23:16]  <= i_din[23:16];
+            if (i_wr[3])
+               mem[i_addr][31:24]  <= i_din[31:24];
+            if (i_rd)
+               o_dout <= mem[i_addr];
       end
    end
 endmodule

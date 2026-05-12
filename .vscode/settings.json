@@ -1,0 +1,20 @@
+{
+    "verible.enabled": true,
+    "verible.linter.enabled": true,
+    "verible.formatter.enabled": true,
+    "verible.binary.path": "",
+    "verible.language-server.arguments": [
+        "--rules_config_default=false",
+        "--wrap_spaces=2",
+        "--column_limit=120"
+    ],
+    "files.associations": {
+        "*.v": "systemverilog",
+        "*.sv": "systemverilog",
+        "*.vh": "systemverilog"
+    },
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+        "source.formatFiles": "never"
+    }
+}
