@@ -1,9 +1,10 @@
 `timescale 1ns/1ps
 
 module eth_rx_dma #(
-    localparam integer FifoDepth = 16
+    localparam integer FifoDepth = 16,
+    localparam integer BURST_LENGTH = 4,
+    localparam integer BURST_CNT_WIDTH = $clog2(BURST_LENGTH) + 1
 )(
-
     //Global
     input wire                      i_clk,
     input wire                      i_rst_n,
@@ -56,7 +57,8 @@ module eth_rx_dma #(
 
     //Interrupt
     output reg                      o_irq_done,
-    output reg                      o_irq_err
+    output reg                      o_irq_err,
+    output reg                      o_irq_busy
 );
 
     //===========================================================
@@ -196,6 +198,21 @@ module eth_rx_dma #(
     assign w_mac_rx_byte_cnt = r_mac_rx_byte_cnt_sync2;
 
     //===========================================================
+    // RX Active Signal
+    //===========================================================
+    // Asserted when receiving a valid frame
+    reg                              r_rx_active;
+
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n)
+            r_rx_active <= 1'b0;
+        else if (w_mac_rx_start)
+            r_rx_active <= 1'b1;
+        else if (w_mac_rx_end || w_mac_rx_abort)
+            r_rx_active <= 1'b0;
+    end
+
+    //===========================================================
     // RX Enable (delayed, same as TX)
     //===========================================================
     reg                             r_rx_en_q;
@@ -296,7 +313,7 @@ module eth_rx_dma #(
         if (!i_rst_n) r_rx_len <= 16'h0;
         else if (r_rx_en && r_rx_en_q && r_bd_rd)
             r_rx_len <= 16'h0;
-        else if (w_mac_rx_valid && w_mac_rx_start)
+        else if (w_mac_rx_start)
             r_rx_len <= 16'h0;
         else if (w_fifo_wr && ~i_fifo_full)
             r_rx_len <= r_rx_len + 16'd4;
@@ -446,13 +463,14 @@ module eth_rx_dma #(
         else o_fifo_clear <= w_fifo_clear;
 
     //===========================================================
-    // AHB Master Controller
+    // AHB Master Controller with BURST Support
     //===========================================================
     // RX: Write data from FIFO to memory
 
     reg                              r_ahb_tx;
     wire                             w_ahb_tx_req;
 
+    // Request when: FIFO has data, RX enabled, and active reception
     assign w_ahb_tx_req = ~i_fifo_empty && r_rx_en && r_rx_en_q && r_rx_active;
 
     always @(posedge i_clk or negedge i_rst_n)
@@ -465,14 +483,80 @@ module eth_rx_dma #(
         if (!i_rst_n) o_ahb_req <= 1'b0;
         else o_ahb_req <= r_ahb_tx;
 
+    // Burst control
+    reg                              r_burst_en;
+    reg [BURST_CNT_WIDTH-1:0]         r_burst_cnt;
+    reg                              r_burst_last;
+
+    // Enable burst when FIFO has >= BURST_LENGTH words
+    wire                             w_enough_for_burst;
+    assign w_enough_for_burst = i_fifo_count >= BURST_LENGTH[15:0];
+
+    // Burst length calculation: min(FIFO count, remaining length, BURST_LENGTH)
+    wire [15:0]                      w_burst_len;
+    wire [15:0]                      w_remaining;
+    assign w_remaining = (r_rx_len >= 16'd4) ? r_rx_len : 16'd4;
+    assign w_burst_len = (w_remaining < BURST_LENGTH[15:0]) ?
+                         w_remaining : BURST_LENGTH[15:0];
+
     // Address generation
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
             o_ahb_addr <= 30'h0;
             o_ahb_addr_lsb <= 2'h0;
-        end else if (r_ahb_tx) begin
+        end else if (w_ahb_tx_req && ~r_ahb_tx) begin
             o_ahb_addr <= r_ptr_msb;
             o_ahb_addr_lsb <= r_ptr_lsb;
+        end else if (i_ahb_ack && r_ahb_tx && !r_burst_last) begin
+            // Increment address for next beat
+            o_ahb_addr <= o_ahb_addr + 30'd1;
+        end
+    end
+
+    // Burst length output
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n) begin
+            o_ahb_len <= 16'h0;
+        end else if (w_ahb_tx_req && ~r_ahb_tx) begin
+            o_ahb_len <= w_burst_len;
+        end
+    end
+
+    // Burst enable output
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n) begin
+            o_ahb_burst_en <= 1'b0;
+        end else if (w_ahb_tx_req && ~r_ahb_tx) begin
+            // Enable burst only if enough data for full burst
+            o_ahb_burst_en <= w_enough_for_burst;
+        end else if (r_burst_last) begin
+            o_ahb_burst_en <= 1'b0;
+        end
+    end
+
+    // Burst counter
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n) begin
+            r_burst_cnt <= {BURST_CNT_WIDTH{1'b0}};
+            r_burst_en <= 1'b0;
+            r_burst_last <= 1'b0;
+        end else if (w_ahb_tx_req && ~r_ahb_tx) begin
+            // Start of new transfer
+            r_burst_cnt <= {BURST_CNT_WIDTH{1'b0}};
+            r_burst_en <= w_enough_for_burst;
+            r_burst_last <= 1'b0;
+        end else if (i_ahb_ack && r_ahb_tx) begin
+            r_burst_cnt <= r_burst_cnt + {{(BURST_CNT_WIDTH-1){1'b0}}, 1'b1};
+
+            // Set last beat one cycle before actual last
+            if (r_burst_cnt == (BURST_LENGTH[BURST_CNT_WIDTH:0] - 2'd2)) begin
+                r_burst_last <= 1'b1;
+            end
+
+            // End burst when counter reaches BURST_LENGTH-1
+            if (r_burst_cnt == (BURST_LENGTH[BURST_CNT_WIDTH:0] - 2'd1)) begin
+                r_burst_en <= 1'b0;
+            end
         end
     end
 
@@ -488,20 +572,65 @@ module eth_rx_dma #(
         if (!i_rst_n) r_ptr_msb <= 30'h0;
         else if (r_incr_ptr) r_ptr_msb <= r_ptr_msb + 1'b1;
 
-    // FIFO read
+    // FIFO read (read every AHB beat)
     always @(posedge i_clk or negedge i_rst_n)
         if (!i_rst_n) o_fifo_rd <= 1'b0;
         else o_fifo_rd <= i_ahb_ack && r_ahb_tx;
 
-    // Length and burst
+    //===========================================================
+    // BUSY_IRQ Detection
+    //===========================================================
+    // Triggered when: frame arrives but no BD is ready
+    //
+    // Reference: eth_wishbone.v lines 2610-2643
+    // Logic:
+    // 1. Detect in MRxClk domain (rBusy_IRQ_rck)
+    // 2. Sync to i_clk domain (rBusy_IRQ_sync1/2/3)
+    // 3. Sync back to MRxClk domain for clearing (rBusy_IRQ_syncb1/2)
+    // 4. Generate pulse (Busy_IRQ)
+
+    // Busy_IRQ in MRxClk domain
+    reg                              r_busy_irq_rck;
+
+    always @(posedge i_mac_clk or negedge i_rst_n) begin
+        if (!i_rst_n)
+            r_busy_irq_rck <= 1'b0;
+        else if (i_mac_rx_valid && i_mac_rx_start_frm && ~r_bd_rdy)
+            // Frame starts but no BD ready
+            r_busy_irq_rck <= 1'b1;
+        else if (r_busy_irq_syncb2)
+            // Cleared when sync back to MRxClk
+            r_busy_irq_rck <= 1'b0;
+    end
+
+    // Sync to i_clk domain (3 FF)
+    reg                              r_busy_irq_sync1;
+    reg                              r_busy_irq_sync2;
+    reg                              r_busy_irq_sync3;
+
+    always @(posedge i_clk) begin
+        r_busy_irq_sync1 <= r_busy_irq_rck;
+        r_busy_irq_sync2 <= r_busy_irq_sync1;
+        r_busy_irq_sync3 <= r_busy_irq_sync2;
+    end
+
+    // Sync back to MRxClk domain for clearing
+    reg                              r_busy_irq_syncb1;
+    reg                              r_busy_irq_syncb2;
+
+    always @(posedge i_mac_clk) begin
+        r_busy_irq_syncb1 <= r_busy_irq_sync2;
+        r_busy_irq_syncb2 <= r_busy_irq_syncb1;
+    end
+
+    // Generate Busy_IRQ pulse (high for one cycle in i_clk domain)
+    reg                              r_busy_irq;
+
     always @(posedge i_clk or negedge i_rst_n) begin
-        if (!i_rst_n) begin
-            o_ahb_len <= 16'h0;
-            o_ahb_burst_en <= 1'b0;
-        end else begin
-            o_ahb_len <= 16'd4;
-            o_ahb_burst_en <= 1'b0;
-        end
+        if (!i_rst_n)
+            r_busy_irq <= 1'b0;
+        else
+            r_busy_irq <= r_busy_irq_sync2 & ~r_busy_irq_sync3;
     end
 
     //===========================================================
@@ -530,6 +659,14 @@ module eth_rx_dma #(
             o_irq_err <= 1'b1;
         else
             o_irq_err <= 1'b0;
+    end
+
+    // Busy interrupt output
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n)
+            o_irq_busy <= 1'b0;
+        else
+            o_irq_busy <= r_busy_irq;
     end
 
 endmodule

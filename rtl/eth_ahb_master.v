@@ -46,10 +46,13 @@ module eth_ahb_master #(
     // RX DMA Interface - write to system RAM
     input wire                  i_rx_req,
     input wire [31:2]           i_rx_addr,
+    input wire [1:0]            i_rx_addr_lsb,  // byte offset for unaligned buffers
+    input wire [15:0]           i_rx_len,       // transfer length
     input wire [31:0]           i_rx_wdata,
     input wire                  i_rx_burst_en,
     output reg                  o_rx_ack,
     output reg                  o_rx_err,
+    output reg                  o_rx_ptr_inc,
 
     // Control
     input wire                  i_tx_en,
@@ -102,10 +105,13 @@ module eth_ahb_master #(
     reg [31:2]      r_tx_addr;
     reg [31:2]      r_rx_addr;
     reg [15:0]      r_tx_len;
+    reg [15:0]      r_rx_len;
     reg [1:0]       r_tx_lsb_rst;  // byte offset latch for unaligned buffers
 
     wire w_len_eq0 = (r_tx_len == 16'd0);
     wire w_len_lt4 = (r_tx_len < 16'd4);
+    wire w_rx_len_eq0 = (r_rx_len == 16'd0);
+    wire w_rx_len_lt4 = (r_rx_len < 16'd4);
 
     // =========================================================
     // Request arbitration
@@ -181,8 +187,8 @@ module eth_ahb_master #(
                 if (w_error) begin
                     r_next = S_ERR;
                 end else if (w_done) begin
-                    if (r_burst_last) begin
-                        // End of RX burst
+                    if (w_rx_len_eq0) begin
+                        // End of RX transfer (all data written)
                         if (w_tx_req) begin
                             r_next = S_TX;
                         end else if (w_rx_req) begin
@@ -339,9 +345,17 @@ module eth_ahb_master #(
 
             if (w_start_rx) begin
                 r_rx_addr <= i_rx_addr;
+                r_rx_len  <= i_rx_len;
             end
-            else if (r_state == S_RX) begin
+            else if (r_state == S_RX && !w_rx_len_eq0) begin
                 r_rx_addr <= r_rx_addr + 1'b1;
+
+                if (w_rx_len_lt4) begin
+                    r_rx_len <= 16'd0;
+                end
+                else begin
+                    r_rx_len <= r_rx_len - 16'd4;
+                end
             end
         end
     end
@@ -379,12 +393,15 @@ module eth_ahb_master #(
         if (!i_rst_n) begin
             o_rx_ack <= 1'b0;
             o_rx_err <= 1'b0;
+            o_rx_ptr_inc <= 1'b0;
         end else begin
             o_rx_ack <= 1'b0;
             o_rx_err <= 1'b0;
+            o_rx_ptr_inc <= 1'b0;
 
             if (r_state == S_RX && w_done && !w_error) begin
                 o_rx_ack <= 1'b1;
+                o_rx_ptr_inc <= 1'b1;
             end
 
             if (r_state == S_RX && w_error) begin

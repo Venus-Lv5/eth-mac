@@ -457,12 +457,12 @@ module eth_tx_dma #(
 
     // Status data for BD write
     wire [8:0] w_stt_in = {
-        w_mac_under_run,
-        w_mac_retry_cnt,
-        r_mac_retry_lmt_sync2,
-        r_mac_late_coll_sync2,
-        r_mac_defer_sync2,
-        r_mac_carry_lost_sync2
+        r_mac_underrun_wb,         // [8] UR - Underrun (FIFO empty)
+        w_mac_retry_cnt,            // [7:4] RTRY - Retry count
+        r_mac_retry_lmt_sync2,      // [3] RL - Retry limit reached
+        r_mac_late_coll_sync2,      // [2] LC - Late collision
+        r_mac_defer_sync2,          // [1] DF - Defer indication
+        r_mac_carry_lost_sync2      // [0] CS - Carrier sense lost
     };
     wire [31:0] w_bd_din = {r_len_lat, 1'b0, r_stt, 2'b0, w_stt_in};
 
