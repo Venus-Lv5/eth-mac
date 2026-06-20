@@ -3,7 +3,12 @@
 // eth_rx_cnt.v
 // RX counters for IEEE 802.3 CSMA/CD reception
 // Based on ethmac eth_rxcounters.v
-// REMOVED per DESIGN_NOTES.md: DlyCrcEn, HugEn, configurable MaxFL, r_IFG
+// Buffer-based version:
+// - DlyCrcEn/HugEn/configurable MaxFL removed.
+// - i_st_data[0] is low nibble of current byte.
+// - i_st_data[1] is high nibble of current byte.
+// - Byte counter reset khi thay nibble D cua SFD.
+// - Byte counter tang sau nibble cao cua byte frame.
 
 module eth_rx_cnt (
     input  wire        i_clk,
@@ -37,21 +42,19 @@ module eth_rx_cnt (
     output wire        o_byte_max_frame  // ByteCnt == MAX_FL
 );
 
-    // Fixed parameter (per DESIGN_NOTES.md)
+    // Fixed parameter.
     // IEEE 802.3: Maximum frame size = 1518 bytes (excluding preamble/SFD)
     localparam [15:0] MAX_FL = 16'd1518;
 
     //============================================================
     // Byte Counter
-    // Counts bytes received in current frame (after SFD)
-    // Note: Byte counting starts from preamble/SFD, increments on odd nibbles
+    // Dem byte frame sau SFD.
+    // Trong DATA_HIGH, r_byte_cnt la index cua byte dang ghep.
+    // Sau canh clock DATA_HIGH, counter tang sang byte tiep theo.
     //============================================================
-    wire w_byte_rst = i_rx_dv & (i_st_idle & i_rx_eq_d | i_st_data[0] & o_byte_max_frame);
+    wire w_byte_rst = i_rx_dv & i_st_sfd & i_rx_eq_d;
     wire w_byte_inc = ~w_byte_rst & i_rx_dv &
-                      (i_st_idle & ~i_will_transmit |
-                       i_st_preamble |              // Count during preamble
-                       i_st_sfd |                  // Count during SFD
-                       i_st_data[1] & ~o_byte_max_frame);
+                      i_st_data[1] & ~o_byte_max_frame;
 
     reg [15:0] r_byte_cnt;
 
@@ -84,7 +87,7 @@ module eth_rx_cnt (
     // Counts 96 bit-times between frames
     // IEEE 802.3: minimum IFG = 96 bits = 24 nibbles/clocks at MII
     //============================================================
-    wire w_ifg_rst = (i_st_idle & i_rx_dv & i_rx_eq_d) | i_st_drop;
+    wire w_ifg_rst = w_byte_rst | i_st_drop;
     wire w_ifg_inc = ~w_ifg_rst & (i_st_drop | i_st_idle) & ~o_ifg_cnt_eq24;
 
     reg [4:0] r_ifg_cnt;

@@ -1,11 +1,11 @@
-// eth_txstatem.v
+// eth_tx_controller.v
 // Ethernet TX State Machine
 // Simplified version for 10/100 MAC (no MII management)
 // Reference: IEEE 802.3
 
 `timescale 1ns/1ps
 
-module eth_txstatem (
+module eth_tx_controller (
     // Global
     input wire              i_clk,
     input wire              i_rst_n,
@@ -18,18 +18,18 @@ module eth_txstatem (
     // Control
     input wire              i_tx_start,          // Start frame
     input wire              i_tx_end,            // End frame
-    input wire              i_tx_underrun,       // FIFO empty
+    input wire              i_tx_underrun,       // Byte source underrun
     input wire              i_tx_done,            // Transmission complete
 
     // Collision (HDX only)
     input wire              i_collision,         // Collision detected
-    input wire              i_underrun,          // FIFO underrun
+    input wire              i_underrun,          // Byte source underrun
     input wire              i_col_window,        // Inside collision window
     input wire              i_retry_max,         // Max retry reached
     input wire              i_random_eq0,        // Random = 0
     input wire              i_random_eq_byte,    // Random = byte count
 
-    // Frame config (from BD)
+    // Frame config
     input wire              i_pad_en,            // Enable padding
     input wire              i_crc_en,            // Enable CRC
 
@@ -70,49 +70,53 @@ module eth_txstatem (
         ST_IPG       = 4'd1,
         ST_IDLE      = 4'd2,
         ST_PREAMBLE  = 4'd3,
-        ST_DATA      = 4'd4,
-        ST_PAD       = 4'd5,
-        ST_FCS       = 4'd6,
-        ST_JAM       = 4'd7,
-        ST_BACKOFF   = 4'd8;
+        ST_DATA_LOW  = 4'd4,
+        ST_DATA_HIGH = 4'd5,
+        ST_PAD       = 4'd6,
+        ST_FCS       = 4'd7,
+        ST_JAM       = 4'd8,
+        ST_BACKOFF   = 4'd9;
 
     reg [3:0] r_state;
     reg [3:0] r_next;
 
     // Internal signals (not output)
-    wire w_start_idle = (r_state == ST_IPG) & (i_nib_cnt >= 7'd24);
-    wire w_start_pad = ~i_collision & (r_state == ST_DATA) & i_tx_end & i_pad_en & ~i_nib_min_fl;
+    wire w_carrier_block = ~i_full_duplex & i_carrier_sense;
+    wire w_collision = ~i_full_duplex & i_collision;
+    // Hack: bu 3 chu ky latency FSM/register de TX_EN gap ngoai MII = 24 clocks.
+    wire w_start_idle = (r_state == ST_IPG) & (i_nib_cnt >= 7'd21);
+    wire w_start_pad = ~w_collision & (r_state == ST_DATA_HIGH) & i_tx_end & i_pad_en & ~i_nib_min_fl;
 
     //============================================================
     // Next-state logic
     //============================================================
 
     // IPG: wait for 96 bit-times (24 nibbles) after defer
-    assign o_start_ipg = (r_state == ST_DEFER) & ~i_excessive_defer & ~i_carrier_sense;
+    assign o_start_ipg = (r_state == ST_DEFER) & ~i_excessive_defer & ~w_carrier_block;
 
     // Preamble: start when idle + tx_start + no carrier
-    assign o_start_preamble = (r_state == ST_IDLE) & i_tx_start & ~i_carrier_sense;
+    assign o_start_preamble = (r_state == ST_IDLE) & i_tx_start & ~w_carrier_block;
 
-    // Data[0]: from preamble (after 15 nib) or continuing data
-    assign o_start_data[0] = ~i_collision & (
+    // Data[0]: low nibble of a byte.
+    assign o_start_data[0] = ~w_collision & (
         ((r_state == ST_PREAMBLE) & i_nib_eq15) |
-        ((r_state == ST_DATA) & ~i_tx_end)
+        ((r_state == ST_DATA_HIGH) & ~i_tx_end)
     );
 
-    // Data[1]: from data[0] if more data to send
-    assign o_start_data[1] = ~i_collision & (r_state == ST_DATA) & ~i_tx_underrun & ~i_max_frame;
+    // Data[1]: high nibble of the same byte.
+    assign o_start_data[1] = ~w_collision & (r_state == ST_DATA_LOW) & ~i_tx_underrun & ~i_max_frame;
 
     // PAD: frame too short (<64 bytes) and padding enabled
     // Note: internal only, used for state transition to FCS
 
     // FCS: end of data (+ optional pad), CRC enabled
-    assign o_start_fcs = ~i_collision & (
-        ((r_state == ST_DATA) & i_tx_end & (~i_pad_en | i_nib_min_fl) & i_crc_en) |
+    assign o_start_fcs = ~w_collision & (
+        ((r_state == ST_DATA_HIGH) & i_tx_end & (~i_pad_en | i_nib_min_fl) & i_crc_en) |
         ((r_state == ST_PAD) & i_nib_min_fl & i_crc_en)
     );
 
     // Jam: collision during preamble/data/pad/fcs
-    assign o_start_jam = (i_collision | i_underrun) & (
+    assign o_start_jam = (w_collision | i_underrun) & (
         ((r_state == ST_PREAMBLE) & i_nib_eq15) |
         (|o_state_data) |
         (r_state == ST_PAD) |
@@ -125,15 +129,15 @@ module eth_txstatem (
 
     // Defer: various conditions
     assign o_start_defer = (
-        ((r_state == ST_IPG) & i_carrier_sense) |                  // Carrier detected during IPG
-        ((r_state == ST_IDLE) & i_carrier_sense) |                // Carrier detected while idle
+        ((r_state == ST_IPG) & w_carrier_block) |                  // Carrier detected during IPG
+        ((r_state == ST_IDLE) & w_carrier_block) |                // Carrier detected while idle
         ((r_state == ST_JAM) & i_nib_eq7 & (i_random_eq0 | ~i_col_window | i_retry_max)) | // Jam complete, no backoff
         ((r_state == ST_BACKOFF) & (i_tx_underrun | i_random_eq_byte)) | // Abort backoff
         i_tx_done |                                                   // TX complete
         i_too_big                                                     // Frame too big
     );
 
-    assign o_defer_ind = (r_state == ST_IDLE) & i_carrier_sense;
+    assign o_defer_ind = (r_state == ST_IDLE) & w_carrier_block;
 
     //============================================================
     // State register
@@ -151,6 +155,8 @@ module eth_txstatem (
 
     //============================================================
     // State output logic
+    // Output phai dua tren state hien tai, khong dua tren next-state.
+    // Neu dua tren r_next, chu ky SFD cuoi preamble co the bi thay bang DATA.
     //============================================================
 
     always @(*) begin
@@ -165,12 +171,13 @@ module eth_txstatem (
         o_state_backoff  = 1'b0;
         o_state_defer    = 1'b0;
 
-        case (r_next)
+        case (r_state)
             ST_DEFER:     o_state_defer    = 1'b1;
             ST_IPG:       o_state_ipg      = 1'b1;
             ST_IDLE:      o_state_idle     = 1'b1;
             ST_PREAMBLE:  o_state_preamble = 1'b1;
-            ST_DATA:      o_state_data     = 2'b11;  // Assert both data bits
+            ST_DATA_LOW:  o_state_data     = 2'b01;  // Low nibble
+            ST_DATA_HIGH: o_state_data     = 2'b10;  // High nibble
             ST_PAD:       o_state_pad      = 1'b1;
             ST_FCS:       o_state_fcs      = 1'b1;
             ST_JAM:       o_state_jam      = 1'b1;
@@ -210,21 +217,36 @@ module eth_txstatem (
                 if (o_start_jam)
                     r_next = ST_JAM;
                 else if (o_start_data[0])
-                    r_next = ST_DATA;
+                    r_next = ST_DATA_LOW;
             end
 
-            ST_DATA: begin
+            ST_DATA_LOW: begin
                 if (o_start_jam)
                     r_next = ST_JAM;
+                else if (o_start_defer)
+                    r_next = ST_DEFER;
+                else if (o_start_data[1])
+                    r_next = ST_DATA_HIGH;
+            end
+
+            ST_DATA_HIGH: begin
+                if (o_start_jam)
+                    r_next = ST_JAM;
+                else if (o_start_defer)
+                    r_next = ST_DEFER;
                 else if (w_start_pad)
                     r_next = ST_PAD;
                 else if (o_start_fcs)
                     r_next = ST_FCS;
+                else if (o_start_data[0])
+                    r_next = ST_DATA_LOW;
             end
 
             ST_PAD: begin
                 if (o_start_jam)
                     r_next = ST_JAM;
+                else if (o_start_defer)
+                    r_next = ST_DEFER;
                 else if (o_start_fcs)
                     r_next = ST_FCS;
             end
@@ -232,6 +254,8 @@ module eth_txstatem (
             ST_FCS: begin
                 if (o_start_jam)
                     r_next = ST_JAM;
+                else if (o_start_defer)
+                    r_next = ST_DEFER;
             end
 
             ST_JAM: begin
@@ -244,8 +268,6 @@ module eth_txstatem (
             ST_BACKOFF: begin
                 if (o_start_defer)
                     r_next = ST_DEFER;
-                else if (o_start_preamble)
-                    r_next = ST_PREAMBLE;
             end
 
             default: r_next = ST_DEFER;

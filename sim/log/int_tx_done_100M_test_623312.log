@@ -1,0 +1,1254 @@
+# vsim -sv_seed 623312 -coverage -coveranalysis -voptargs="+acc" -assertdebug -c testbench -do "coverage save -codeAll -cvg -onexit int_tx_done_100M_test_623312.ucdb; log -r /*;run -all;" -l int_tx_done_100M_test_623312.log "+UVM_TESTNAME=int_tx_done_100M_test" "+UVM_VERBOSITY=UVM_HIGH" 
+# Start time: 13:41:20 on Jun 20,2026
+# Loading /tmp/venus@nus-fedora_dpi_8062/linux_x86_64_gcc-15/export_tramp.so
+# ** Note: (vsim-8009) Loading existing optimized design _opt1
+# //  Questa Sim-64
+# //  Version 2021.2_1 linux_x86_64 May 15 2021
+# //
+# //  Copyright 1991-2021 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# ** Note: (vsim-8785) UVM-aware debugging capabilities will be disabled since no compiled "questa_uvm_pkg" can be found.
+# This also means that later if you turn on UVM-aware debugging your debug simulations may have
+# different random seeds from your non-debug simulations.
+# Loading sv_std.std
+# Loading work.ahb_if(fast)
+# Loading work.phy_if(fast)
+# Loading work.uvm_pkg(fast)
+# Loading work.ahb_pkg(fast)
+# Loading work.phy_pkg(fast)
+# Loading work.seq_pkg(fast)
+# Loading work.eth_register_pkg(fast)
+# Loading work.eth_regmodel_pkg(fast)
+# Loading work.env_pkg(fast)
+# Loading work.test_pkg(fast)
+# Loading work.testbench(fast)
+# Loading work.ahb_if(fast__2)
+# Loading work.phy_if(fast__2)
+# Loading work.eth_top(fast)
+# Loading work.eth_ahb_slave(fast)
+# Loading work.eth_register(fast)
+# Loading work.eth_sync_level(fast)
+# Loading work.eth_sync_level(fast__1)
+# Loading work.eth_sync_level(fast__2)
+# Loading work.eth_sync_level(fast__3)
+# Loading work.eth_tx_frame_buffer(fast)
+# Loading work.eth_cdc_pulse(fast)
+# Loading work.eth_sync_level(fast__4)
+# Loading work.eth_tx_buffer_ctrl(fast)
+# Loading work.eth_rx_mac(fast)
+# Loading work.eth_rx_controller(fast)
+# Loading work.eth_rx_cnt(fast)
+# Loading work.eth_crc(fast)
+# Loading work.eth_rx_addr_check(fast)
+# Loading work.eth_rx_buffer_ctrl(fast)
+# Loading work.eth_rx_frame_buffer(fast)
+# Loading work.eth_sync_level(fast__5)
+# Loading work.eth_rx_pause(fast)
+# Loading work.eth_tx_pause(fast)
+# Loading work.eth_tx_mac(fast)
+# Loading work.eth_tx_cnt(fast)
+# Loading work.eth_tx_controller(fast)
+# Loading work.eth_backoff_random(fast)
+# Compiling /tmp/venus@nus-fedora_dpi_8062/linux_x86_64_gcc-15/exportwrapper.c
+# Loading /tmp/venus@nus-fedora_dpi_8062/linux_x86_64_gcc-15/vsim_auto_compile.so
+# coverage save -codeAll -cvg -onexit int_tx_done_100M_test_623312.ucdb
+#  log -r /*
+# run -all
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/base/uvm_root.svh(392) @ 0: reporter [UVM/RELNOTES] 
+# ----------------------------------------------------------------
+# UVM-1.2
+# (C) 2007-2014 Mentor Graphics Corporation
+# (C) 2007-2014 Cadence Design Systems, Inc.
+# (C) 2006-2014 Synopsys, Inc.
+# (C) 2011-2013 Cypress Semiconductor Corp.
+# (C) 2013-2014 NVIDIA Corporation
+# ----------------------------------------------------------------
+# 
+#   ***********       IMPORTANT RELEASE NOTES         ************
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_NO_DEPRECATED undefined.
+#   See http://www.eda.org/svdb/view.php?id=3313 for more details.
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+#   See http://www.eda.org/svdb/view.php?id=3770 for more details.
+# 
+#       (Specify +UVM_NO_RELNOTES to turn off this notice)
+# 
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/base/uvm_root.svh(453) @ 0: reporter [NO_DPI_TSTNAME] UVM_NO_DPI defined--getting UVM_TESTNAME directly, without DPI
+# UVM_INFO @ 0: reporter [RNTST] Running test int_tx_done_100M_test...
+# UVM_INFO ./../testcases/eth_base_test.sv(220) @ 0: uvm_test_top [build_phase] Entered...
+# UVM_INFO ./../testcases/eth_base_test.sv(237) @ 0: uvm_test_top [build_phase] Exitting...
+# UVM_INFO ./../tb/eth_environment.sv(24) @ 0: uvm_test_top.env [build_phase] Entered...
+# UVM_INFO ./../tb/eth_environment.sv(52) @ 0: uvm_test_top.env [build_phase] Exitting...
+# UVM_INFO ./../vip/ahb_vip/ahb_agent.sv(19) @ 0: uvm_test_top.env.ahb_agt [ahb_agent] Active agent is configued
+# UVM_INFO ./../vip/phy_vip/phy_agent.sv(25) @ 0: uvm_test_top.env.phy_agt [phy_agent] Active agent is configured
+# UVM_INFO ./../tb/eth_environment.sv(57) @ 0: uvm_test_top.env [connect_phase] Entered...
+# UVM_INFO ./../tb/eth_environment.sv(70) @ 0: uvm_test_top.env [connect_phase] Exiting...
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/base/uvm_root.svh(579) @ 0: reporter [UVMTOP] UVM testbench topology:
+# ------------------------------------------------------------------------------
+# Name                         Type                                  Size  Value
+# ------------------------------------------------------------------------------
+# uvm_test_top                 int_tx_done_100M_test                 -     @347 
+#   env                        eth_environment                       -     @364 
+#     ahb_agt                  ahb_agent                             -     @390 
+#       driver                 ahb_driver                            -     @552 
+#         rsp_port             uvm_analysis_port                     -     @571 
+#         seq_item_port        uvm_seq_item_pull_port                -     @561 
+#       monitor                ahb_monitor                           -     @718 
+#         ahb_observe_port     uvm_analysis_port                     -     @731 
+#       sequencer              ahb_sequencer                         -     @581 
+#         rsp_export           uvm_analysis_export                   -     @590 
+#         seq_item_export      uvm_seq_item_pull_imp                 -     @708 
+#         arbitration_queue    array                                 0     -    
+#         lock_queue           array                                 0     -    
+#         num_last_reqs        integral                              32    'd1  
+#         num_last_rsps        integral                              32    'd1  
+#     ahb_predictor            uvm_reg_predictor #(ahb_transaction)  -     @509 
+#       bus_in                 uvm_analysis_imp                      -     @518 
+#       reg_ap                 uvm_analysis_port                     -     @528 
+#     phy_agt                  phy_agent                             -     @399 
+#       driver                 phy_driver                            -     @889 
+#         rsp_port             uvm_analysis_port                     -     @908 
+#         seq_item_port        uvm_seq_item_pull_port                -     @898 
+#       monitor                phy_monitor                           -     @922 
+#         phy_observe_port_rx  uvm_analysis_port                     -     @941 
+#         phy_observe_port_tx  uvm_analysis_port                     -     @931 
+#       sequencer              phy_sequencer                         -     @752 
+#         rsp_export           uvm_analysis_export                   -     @761 
+#         seq_item_export      uvm_seq_item_pull_imp                 -     @879 
+#         arbitration_queue    array                                 0     -    
+#         lock_queue           array                                 0     -    
+#         num_last_reqs        integral                              32    'd1  
+#         num_last_rsps        integral                              32    'd1  
+#     sb                       eth_scoreboard                        -     @408 
+#       ahb_export             uvm_analysis_imp_ahb                  -     @983 
+#       phy_rx_export          uvm_analysis_imp_phy_rx               -     @973 
+#       phy_tx_export          uvm_analysis_imp_phy_tx               -     @963 
+# ------------------------------------------------------------------------------
+# 
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/base/uvm_traversal.svh(279) @ 0: reporter [UVM/COMP/NAMECHECK] This implementation of the component name checks requires DPI to be enabled
+# UVM_INFO ./../testcases/eth_base_test.sv(137) @ 0: uvm_test_top [int_tx_done_100M_test] burst_write_reg_range: start=0x0 end=0x10 beats=5 auto_fixed_burst=1
+# UVM_INFO ./../vip/phy_vip/phy_driver.sv(62) @ 0: uvm_test_top.env.phy_agt.driver [run_phase] ENTERED...
+# UVM_INFO ./../sequences/eth_ahb_burst_write_seq.sv(99) @ 105000: uvm_test_top.env.ahb_agt.sequencer@@burst_seq [eth_ahb_burst_write_seq] AHB burst write chunk: addr=0x0 beats=4 burst=HBURST_INCR4
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 105000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x0
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 125000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1079        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_INCR4 
+#   addr         integral         10    'h0          
+#   data         integral         32    'h33445566   
+#   write        integral         1     1            
+#   wdata        integral         32    'h33445566   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_INCR4 
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd4          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h33445566   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h0          
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h33445566   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 125000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x0, data = 0x33445566, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 125000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.MAC_SA_LOW: value='h33445566 : updated value = 'h33445566
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 135000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# --------------------------------------------------
+# Name           Type             Size  Value       
+# --------------------------------------------------
+# trans          ahb_transaction  -     @1093       
+#   xact_type    xact_type_enum   1     WRITE       
+#   xfer_size    hsize_e          3     HSIZE_WORD  
+#   burst_type   hburst_e         3     HBURST_INCR4
+#   addr         integral         10    'h4         
+#   data         integral         32    'h1222      
+#   write        integral         1     1           
+#   wdata        integral         32    'h1222      
+#   rdata        integral         32    'h0         
+#   size         hsize_e          3     HSIZE_WORD  
+#   burst        hburst_e         3     HBURST_INCR4
+#   prot         integral         4     'h0         
+#   lock         integral         1     'h0         
+#   resp         hresp_e          1     HRESP_OKAY  
+#   num_beats    integral         32    'd4         
+#   idle_cycles  integral         32    'd0         
+#   addr_q       da(integral)     0     -           
+#   wdata_q      da(integral)     1     -           
+#     [0]        integral         32    'h1222      
+#   rdata_q      da(integral)     0     -           
+#   resp_q       array(hresp_e)   1     -           
+#     [0]        hresp_e          1     HRESP_OKAY  
+#   htrans       htrans_e         2     HTRANS_SEQ  
+#   trans        htrans_e         2     HTRANS_SEQ  
+#   beat_addr    da(integral)     1     -           
+#     [0]        integral         10    'h4         
+#   beat_wdata   da(integral)     1     -           
+#     [0]        integral         32    'h1222      
+#   beat_rdata   da(integral)     0     -           
+#   beat_resp    array(hresp_e)   1     -           
+#     [0]        hresp_e          1     HRESP_OKAY  
+#   beat_index   integral         32    'd1         
+# --------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 135000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4, data = 0x1222, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 135000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.MAC_SA_HIGH: value='h1222 : updated value = 'h1222
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 145000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# --------------------------------------------------
+# Name           Type             Size  Value       
+# --------------------------------------------------
+# trans          ahb_transaction  -     @1107       
+#   xact_type    xact_type_enum   1     WRITE       
+#   xfer_size    hsize_e          3     HSIZE_WORD  
+#   burst_type   hburst_e         3     HBURST_INCR4
+#   addr         integral         10    'h8         
+#   data         integral         32    'h0         
+#   write        integral         1     1           
+#   wdata        integral         32    'h0         
+#   rdata        integral         32    'h0         
+#   size         hsize_e          3     HSIZE_WORD  
+#   burst        hburst_e         3     HBURST_INCR4
+#   prot         integral         4     'h0         
+#   lock         integral         1     'h0         
+#   resp         hresp_e          1     HRESP_OKAY  
+#   num_beats    integral         32    'd4         
+#   idle_cycles  integral         32    'd0         
+#   addr_q       da(integral)     0     -           
+#   wdata_q      da(integral)     1     -           
+#     [0]        integral         32    'h0         
+#   rdata_q      da(integral)     0     -           
+#   resp_q       array(hresp_e)   1     -           
+#     [0]        hresp_e          1     HRESP_OKAY  
+#   htrans       htrans_e         2     HTRANS_SEQ  
+#   trans        htrans_e         2     HTRANS_SEQ  
+#   beat_addr    da(integral)     1     -           
+#     [0]        integral         10    'h8         
+#   beat_wdata   da(integral)     1     -           
+#     [0]        integral         32    'h0         
+#   beat_rdata   da(integral)     0     -           
+#   beat_resp    array(hresp_e)   1     -           
+#     [0]        hresp_e          1     HRESP_OKAY  
+#   beat_index   integral         32    'd2         
+# --------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 145000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x8, data = 0x0, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 145000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.PAUSE_CTRL: value='h0 : updated value = 'h0
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 155000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x0 and data: 0x33445566
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 155000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# --------------------------------------------------
+# Name           Type             Size  Value       
+# --------------------------------------------------
+# trans          ahb_transaction  -     @1127       
+#   xact_type    xact_type_enum   1     WRITE       
+#   xfer_size    hsize_e          3     HSIZE_WORD  
+#   burst_type   hburst_e         3     HBURST_INCR4
+#   addr         integral         10    'hc         
+#   data         integral         32    'h1         
+#   write        integral         1     1           
+#   wdata        integral         32    'h1         
+#   rdata        integral         32    'h0         
+#   size         hsize_e          3     HSIZE_WORD  
+#   burst        hburst_e         3     HBURST_INCR4
+#   prot         integral         4     'h0         
+#   lock         integral         1     'h0         
+#   resp         hresp_e          1     HRESP_OKAY  
+#   num_beats    integral         32    'd4         
+#   idle_cycles  integral         32    'd0         
+#   addr_q       da(integral)     0     -           
+#   wdata_q      da(integral)     1     -           
+#     [0]        integral         32    'h1         
+#   rdata_q      da(integral)     0     -           
+#   resp_q       array(hresp_e)   1     -           
+#     [0]        hresp_e          1     HRESP_OKAY  
+#   htrans       htrans_e         2     HTRANS_SEQ  
+#   trans        htrans_e         2     HTRANS_SEQ  
+#   beat_addr    da(integral)     1     -           
+#     [0]        integral         10    'hc         
+#   beat_wdata   da(integral)     1     -           
+#     [0]        integral         32    'h1         
+#   beat_rdata   da(integral)     0     -           
+#   beat_resp    array(hresp_e)   1     -           
+#     [0]        hresp_e          1     HRESP_OKAY  
+#   beat_index   integral         32    'd3         
+# --------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 155000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0xc, data = 0x1, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 155000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.IER: value='h1 : updated value = 'h1
+# UVM_INFO ./../sequences/eth_ahb_burst_write_seq.sv(99) @ 155000: uvm_test_top.env.ahb_agt.sequencer@@burst_seq [eth_ahb_burst_write_seq] AHB burst write chunk: addr=0x10 beats=1 burst=HBURST_SINGLE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 155000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x10
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 175000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1150        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h10         
+#   data         integral         32    'h23         
+#   write        integral         1     1            
+#   wdata        integral         32    'h23         
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h23         
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h10         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h23         
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 175000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x10, data = 0x23, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 175000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.MAC_CTRL: value='h23 : updated value = 'h23
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 175000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x10 and data: 0x23
+# UVM_INFO ./../testcases/eth_base_test.sv(149) @ 175000: uvm_test_top [int_tx_done_100M_test] burst_write_reg_range: completed
+# UVM_INFO ./../testcases/eth_base_test.sv(137) @ 175000: uvm_test_top [int_tx_done_100M_test] burst_write_reg_range: start=0x40 end=0x44 beats=2 auto_fixed_burst=1
+# UVM_INFO ./../sequences/eth_ahb_burst_write_seq.sv(99) @ 175000: uvm_test_top.env.ahb_agt.sequencer@@burst_seq [eth_ahb_burst_write_seq] AHB burst write chunk: addr=0x40 beats=2 burst=HBURST_INCR
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 175000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x40
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 195000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1190        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_INCR  
+#   addr         integral         10    'h40         
+#   data         integral         32    'hccddeeff   
+#   write        integral         1     1            
+#   wdata        integral         32    'hccddeeff   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_INCR  
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd0          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'hccddeeff   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h40         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'hccddeeff   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 195000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x40, data = 0xccddeeff, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 195000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DA_LOW: value='hccddeeff : updated value = 'hccddeeff
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 205000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x40 and data: 0xccddeeff
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 205000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# -------------------------------------------------
+# Name           Type             Size  Value      
+# -------------------------------------------------
+# trans          ahb_transaction  -     @1210      
+#   xact_type    xact_type_enum   1     WRITE      
+#   xfer_size    hsize_e          3     HSIZE_WORD 
+#   burst_type   hburst_e         3     HBURST_INCR
+#   addr         integral         10    'h44       
+#   data         integral         32    'haabb     
+#   write        integral         1     1          
+#   wdata        integral         32    'haabb     
+#   rdata        integral         32    'h0        
+#   size         hsize_e          3     HSIZE_WORD 
+#   burst        hburst_e         3     HBURST_INCR
+#   prot         integral         4     'h0        
+#   lock         integral         1     'h0        
+#   resp         hresp_e          1     HRESP_OKAY 
+#   num_beats    integral         32    'd0        
+#   idle_cycles  integral         32    'd0        
+#   addr_q       da(integral)     0     -          
+#   wdata_q      da(integral)     1     -          
+#     [0]        integral         32    'haabb     
+#   rdata_q      da(integral)     0     -          
+#   resp_q       array(hresp_e)   1     -          
+#     [0]        hresp_e          1     HRESP_OKAY 
+#   htrans       htrans_e         2     HTRANS_SEQ 
+#   trans        htrans_e         2     HTRANS_SEQ 
+#   beat_addr    da(integral)     1     -          
+#     [0]        integral         10    'h44       
+#   beat_wdata   da(integral)     1     -          
+#     [0]        integral         32    'haabb     
+#   beat_rdata   da(integral)     0     -          
+#   beat_resp    array(hresp_e)   1     -          
+#     [0]        hresp_e          1     HRESP_OKAY 
+#   beat_index   integral         32    'd1        
+# -------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 205000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x44, data = 0xaabb, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 205000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DA_HIGH: value='haabb : updated value = 'haabb
+# UVM_INFO ./../testcases/eth_base_test.sv(149) @ 205000: uvm_test_top [int_tx_done_100M_test] burst_write_reg_range: completed
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 205000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x48, data = 0x2e, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 205000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x48
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 225000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1246        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h48         
+#   data         integral         32    'h2e         
+#   write        integral         1     1            
+#   wdata        integral         32    'h2e         
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h2e         
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h48         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h2e         
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 225000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x48, data = 0x2e, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 225000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_LEN: value='h2e : updated value = 'h2e
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 225000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x48 and data: 0x2e
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 225000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x48, data = 0x2e, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 225000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_LEN=0x2e
+# UVM_INFO ./../testcases/eth_base_test.sv(182) @ 225000: uvm_test_top [int_tx_done_100M_test] random_payload: byte_len=46 num_words=12
+#   payload[0] = 32'h099250a5
+#   payload[1] = 32'h8e78ae63
+#   payload[2] = 32'h21541922
+#   payload[3] = 32'h503631d7
+#   payload[4] = 32'ha0f6173f
+#   payload[5] = 32'h9670c127
+#   payload[6] = 32'h6b4b12b7
+#   payload[7] = 32'haf914c1b
+#   payload[8] = 32'hbbf7937c
+#   payload[9] = 32'hb8e3c00a
+#   payload[10] = 32'h1c0d2531
+#   payload[11] = 32'h00006609
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 225000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0x99250a5, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 225000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 245000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1290        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'h99250a5    
+#   write        integral         1     1            
+#   wdata        integral         32    'h99250a5    
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h99250a5    
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h99250a5    
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 245000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x99250a5, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 245000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='h99250a5 : updated value = 'h99250a5
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 245000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0x99250a5
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 245000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x99250a5, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 245000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0x99250a5
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 245000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0x8e78ae63, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 245000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 265000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1332        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'h8e78ae63   
+#   write        integral         1     1            
+#   wdata        integral         32    'h8e78ae63   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h8e78ae63   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h8e78ae63   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 265000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x8e78ae63, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 265000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='h8e78ae63 : updated value = 'h8e78ae63
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 265000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0x8e78ae63
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 265000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x8e78ae63, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 265000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0x8e78ae63
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 265000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0x21541922, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 265000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 285000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1374        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'h21541922   
+#   write        integral         1     1            
+#   wdata        integral         32    'h21541922   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h21541922   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h21541922   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 285000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x21541922, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 285000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='h21541922 : updated value = 'h21541922
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 285000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0x21541922
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 285000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x21541922, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 285000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0x21541922
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 285000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0x503631d7, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 285000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 305000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1416        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'h503631d7   
+#   write        integral         1     1            
+#   wdata        integral         32    'h503631d7   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h503631d7   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h503631d7   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 305000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x503631d7, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 305000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='h503631d7 : updated value = 'h503631d7
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 305000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0x503631d7
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 305000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x503631d7, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 305000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0x503631d7
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 305000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0xa0f6173f, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 305000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 325000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1458        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'ha0f6173f   
+#   write        integral         1     1            
+#   wdata        integral         32    'ha0f6173f   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'ha0f6173f   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'ha0f6173f   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 325000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0xa0f6173f, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 325000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='ha0f6173f : updated value = 'ha0f6173f
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 325000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0xa0f6173f
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 325000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0xa0f6173f, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 325000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0xa0f6173f
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 325000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0x9670c127, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 325000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 345000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1500        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'h9670c127   
+#   write        integral         1     1            
+#   wdata        integral         32    'h9670c127   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h9670c127   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h9670c127   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 345000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x9670c127, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 345000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='h9670c127 : updated value = 'h9670c127
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 345000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0x9670c127
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 345000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x9670c127, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 345000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0x9670c127
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 345000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0x6b4b12b7, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 345000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 365000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1542        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'h6b4b12b7   
+#   write        integral         1     1            
+#   wdata        integral         32    'h6b4b12b7   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h6b4b12b7   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h6b4b12b7   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 365000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x6b4b12b7, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 365000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='h6b4b12b7 : updated value = 'h6b4b12b7
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 365000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0x6b4b12b7
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 365000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x6b4b12b7, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 365000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0x6b4b12b7
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 365000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0xaf914c1b, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 365000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 385000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1584        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'haf914c1b   
+#   write        integral         1     1            
+#   wdata        integral         32    'haf914c1b   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'haf914c1b   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'haf914c1b   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 385000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0xaf914c1b, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 385000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='haf914c1b : updated value = 'haf914c1b
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 385000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0xaf914c1b
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 385000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0xaf914c1b, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 385000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0xaf914c1b
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 385000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0xbbf7937c, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 385000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 405000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1626        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'hbbf7937c   
+#   write        integral         1     1            
+#   wdata        integral         32    'hbbf7937c   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'hbbf7937c   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'hbbf7937c   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 405000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0xbbf7937c, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 405000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='hbbf7937c : updated value = 'hbbf7937c
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 405000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0xbbf7937c
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 405000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0xbbf7937c, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 405000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0xbbf7937c
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 405000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0xb8e3c00a, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 405000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 425000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1668        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'hb8e3c00a   
+#   write        integral         1     1            
+#   wdata        integral         32    'hb8e3c00a   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'hb8e3c00a   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'hb8e3c00a   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 425000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0xb8e3c00a, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 425000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='hb8e3c00a : updated value = 'hb8e3c00a
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 425000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0xb8e3c00a
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 425000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0xb8e3c00a, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 425000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0xb8e3c00a
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 425000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0x1c0d2531, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 425000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 445000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1710        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'h1c0d2531   
+#   write        integral         1     1            
+#   wdata        integral         32    'h1c0d2531   
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h1c0d2531   
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h1c0d2531   
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 445000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x1c0d2531, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 445000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='h1c0d2531 : updated value = 'h1c0d2531
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 445000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0x1c0d2531
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 445000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x1c0d2531, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 445000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0x1c0d2531
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 445000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x4c, data = 0x6609, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 445000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x4c
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 465000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1752        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h4c         
+#   data         integral         32    'h6609       
+#   write        integral         1     1            
+#   wdata        integral         32    'h6609       
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h6609       
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h4c         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h6609       
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 465000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x6609, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 465000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_DATA: value='h6609 : updated value = 'h6609
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 465000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x4c and data: 0x6609
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 465000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x4c, data = 0x6609, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 465000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_DATA=0x6609
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 465000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x50, data = 0x1, kind = WRITE
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 465000: uvm_test_top.env.ahb_agt.driver [run_phase] Start WRITE transaction - ADRRESS: 0x50
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 485000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1794        
+#   xact_type    xact_type_enum   1     WRITE        
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h50         
+#   data         integral         32    'h1          
+#   write        integral         1     1            
+#   wdata        integral         32    'h1          
+#   rdata        integral         32    'h0          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h1          
+#   rdata_q      da(integral)     0     -            
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h50         
+#   beat_wdata   da(integral)     1     -            
+#     [0]        integral         32    'h1          
+#   beat_rdata   da(integral)     0     -            
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 485000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x50, data = 0x1, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(218) @ 485000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed WRITE transaction to register regmodel.TX_CMD: value='h1 : updated value = 'h1
+# UVM_INFO ./../tb/eth_scoreboard.sv(474) @ 485000: uvm_test_top.env.sb [eth_scoreboard] Build TX expected frame DA=aabbccddeeff SA=122233445566 LEN=46 payload_bytes=46
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 485000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed WRITE transaction at addr 0x50 and data: 0x1
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 485000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x50, data = 0x1, kind = UVM_WRITE, status = UVM_IS_OK
+# UVM_INFO @ 485000: reporter [RegModel] Wrote register via map regmodel.ahb_map: regmodel.TX_CMD=0x1
+# UVM_INFO ./../vip/phy_vip/phy_monitor.sv(63) @ 6821000: uvm_test_top.env.phy_agt.monitor [phy_monitor] Send tx_trans from monitor to scoreboard: 
+# ---------------------------------------------------------
+# Name              Type             Size  Value           
+# ---------------------------------------------------------
+# tx_trans          phy_transaction  -     @1820           
+#   frame_type      frame_type_enum  2     ETH_FRAME       
+#   preamble        integral         56    'h55555555555555
+#   sfd             integral         8     'hd5            
+#   payload         da(integral)     46    -               
+#     [0]           integral         8     'h9             
+#     [1]           integral         8     'h92            
+#     [2]           integral         8     'h50            
+#     [3]           integral         8     'ha5            
+#     [4]           integral         8     'h8e            
+#     ...           ...              ...   ...             
+#     [41]          integral         8     'hd             
+#     [42]          integral         8     'h25            
+#     [43]          integral         8     'h31            
+#     [44]          integral         8     'h0             
+#     [45]          integral         8     'h0             
+#   len             integral         16    'd46            
+#   crc             integral         32    'had402a26      
+#   bad_crc         integral         1     'b0             
+#   dst_mac         integral         48    'haabbccddeeff  
+#   src_mac         integral         48    'h122233445566  
+#   opcode          integral         16    'h1             
+#   pause_timer     integral         16    'h0             
+#   RSVD            sa(integral)     1     -               
+#     [0]           integral         8     'h0             
+#     [1]           integral         8     'h0             
+#     [2]           integral         8     'h0             
+#     [3]           integral         8     'h0             
+#     [4]           integral         8     'h0             
+#   type_len        integral         16    'h2e            
+#   coll_det_delay  integral         32    'd0             
+# ---------------------------------------------------------
+# 
+# UVM_INFO ./../tb/eth_scoreboard.sv(82) @ 6821000: uvm_test_top.env.sb [run_phase] Get frame data from tx: 
+# ---------------------------------------------------------
+# Name              Type             Size  Value           
+# ---------------------------------------------------------
+# tx_trans          phy_transaction  -     @1820           
+#   frame_type      frame_type_enum  2     ETH_FRAME       
+#   preamble        integral         56    'h55555555555555
+#   sfd             integral         8     'hd5            
+#   payload         da(integral)     46    -               
+#     [0]           integral         8     'h9             
+#     [1]           integral         8     'h92            
+#     [2]           integral         8     'h50            
+#     [3]           integral         8     'ha5            
+#     [4]           integral         8     'h8e            
+#     ...           ...              ...   ...             
+#     [41]          integral         8     'hd             
+#     [42]          integral         8     'h25            
+#     [43]          integral         8     'h31            
+#     [44]          integral         8     'h0             
+#     [45]          integral         8     'h0             
+#   len             integral         16    'd46            
+#   crc             integral         32    'had402a26      
+#   bad_crc         integral         1     'b0             
+#   dst_mac         integral         48    'haabbccddeeff  
+#   src_mac         integral         48    'h122233445566  
+#   opcode          integral         16    'h1             
+#   pause_timer     integral         16    'h0             
+#   RSVD            sa(integral)     1     -               
+#     [0]           integral         8     'h0             
+#     [1]           integral         8     'h0             
+#     [2]           integral         8     'h0             
+#     [3]           integral         8     'h0             
+#     [4]           integral         8     'h0             
+#   type_len        integral         16    'h2e            
+#   coll_det_delay  integral         32    'd0             
+# ---------------------------------------------------------
+# 
+# UVM_INFO ./../tb/eth_scoreboard.sv(518) @ 6821000: uvm_test_top.env.sb [eth_scoreboard] Entered check_TX_data
+# UVM_INFO ./../tb/eth_scoreboard.sv(572) @ 6821000: uvm_test_top.env.sb [eth_scoreboard] Exiting check_TX_data: TX matched
+# UVM_INFO ./../testcases/eth_base_test.sv(209) @ 6925000: uvm_test_top [int_tx_done_100M_test] Interrupt detected
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(31) @ 6925000: reporter [eth_reg2ahb_adapter] reg2bus: address = 0x60, data = 0x0, kind = READ
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(28) @ 6925000: uvm_test_top.env.ahb_agt.driver [run_phase] Start  READ transaction - ADRRESS: 0x60
+# UVM_INFO ./../vip/ahb_vip/ahb_monitor.sv(135) @ 6945000: uvm_test_top.env.ahb_agt.monitor [ahb_monitor] Send trans from monitor to scoreboard: 
+# ---------------------------------------------------
+# Name           Type             Size  Value        
+# ---------------------------------------------------
+# trans          ahb_transaction  -     @1852        
+#   xact_type    xact_type_enum   1     READ         
+#   xfer_size    hsize_e          3     HSIZE_WORD   
+#   burst_type   hburst_e         3     HBURST_SINGLE
+#   addr         integral         10    'h60         
+#   data         integral         32    'h5          
+#   write        integral         1     'd0          
+#   wdata        integral         32    'h0          
+#   rdata        integral         32    'h5          
+#   size         hsize_e          3     HSIZE_WORD   
+#   burst        hburst_e         3     HBURST_SINGLE
+#   prot         integral         4     'h0          
+#   lock         integral         1     'h0          
+#   resp         hresp_e          1     HRESP_OKAY   
+#   num_beats    integral         32    'd1          
+#   idle_cycles  integral         32    'd0          
+#   addr_q       da(integral)     0     -            
+#   wdata_q      da(integral)     0     -            
+#   rdata_q      da(integral)     1     -            
+#     [0]        integral         32    'h5          
+#   resp_q       array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   htrans       htrans_e         2     HTRANS_NONSEQ
+#   trans        htrans_e         2     HTRANS_NONSEQ
+#   beat_addr    da(integral)     1     -            
+#     [0]        integral         10    'h60         
+#   beat_wdata   da(integral)     0     -            
+#   beat_rdata   da(integral)     1     -            
+#     [0]        integral         32    'h5          
+#   beat_resp    array(hresp_e)   1     -            
+#     [0]        hresp_e          1     HRESP_OKAY   
+#   beat_index   integral         32    'd0          
+# ---------------------------------------------------
+# 
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 6945000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x60, data = 0x5, kind = UVM_READ, status = UVM_IS_OK
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/reg/uvm_reg_predictor.svh(223) @ 6945000: uvm_test_top.env.ahb_predictor [REG_PREDICT] Observed READ transaction to register regmodel.FSR: value='h5
+# UVM_INFO ./../vip/ahb_vip/ahb_driver.sv(47) @ 6945000: uvm_test_top.env.ahb_agt.driver [run_phase] Completed  READ transaction at addr 0x60 and data: 0x5
+# UVM_INFO ./../regmodel/eth_reg2ahb_adapter.sv(46) @ 6945000: reporter [eth_reg2ahb_adapter] bus2reg: address = 0x60, data = 0x5, kind = UVM_READ, status = UVM_IS_OK
+# UVM_INFO @ 6945000: reporter [RegModel] Read  register via map regmodel.ahb_map: regmodel.FSR=5
+# UVM_INFO ./../testcases/int_tx_done_100M_test.sv(54) @ 6945000: uvm_test_top [int_tx_done_100M_test] INT: TX_DONE IRQ_SEEN=1 FSR=0x00000005
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/base/uvm_objection.svh(1270) @ 6945000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+# UVM_INFO ./../testcases/eth_base_test.sv(252) @ 6945000: uvm_test_top [final_phase] Entered...
+# UVM_INFO ./../testcases/eth_base_test.sv(260) @ 6945000: uvm_test_top [int_tx_done_100M_test] --------------------------------
+# UVM_INFO ./../testcases/eth_base_test.sv(261) @ 6945000: uvm_test_top [int_tx_done_100M_test] ----	TEST PASSED	----
+# UVM_INFO ./../testcases/eth_base_test.sv(262) @ 6945000: uvm_test_top [int_tx_done_100M_test] --------------------------------
+# UVM_INFO ./../testcases/eth_base_test.sv(265) @ 6945000: uvm_test_top [final_phase] Exitting...
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/base/uvm_report_catcher.svh(705) @ 6945000: reporter [UVM/REPORT/CATCHER] 
+# --- UVM Report catcher Summary ---
+# 
+# 
+# Number of demoted UVM_FATAL reports  :    0
+# Number of demoted UVM_ERROR reports  :    0
+# Number of demoted UVM_WARNING reports:    0
+# Number of caught UVM_FATAL reports   :    0
+# Number of caught UVM_ERROR reports   :    0
+# Number of caught UVM_WARNING reports :    0
+# 
+# UVM_INFO /home/venus/QuestaSim/uvm-1.2/src/base/uvm_report_server.svh(847) @ 6945000: reporter [UVM/REPORT/SERVER] 
+# --- UVM Report Summary ---
+# 
+# ** Report counts by severity
+# UVM_INFO :  183
+# UVM_WARNING :    0
+# UVM_ERROR :    0
+# UVM_FATAL :    0
+# ** Report counts by id
+# [NO_DPI_TSTNAME]     1
+# [REG_PREDICT]    22
+# [RNTST]     1
+# [RegModel]    15
+# [TEST_DONE]     1
+# [UVM/COMP/NAMECHECK]     1
+# [UVM/RELNOTES]     1
+# [UVM/REPORT/CATCHER]     1
+# [UVMTOP]     1
+# [ahb_agent]     1
+# [ahb_monitor]    22
+# [build_phase]     4
+# [connect_phase]     2
+# [eth_ahb_burst_write_seq]     3
+# [eth_reg2ahb_adapter]    52
+# [eth_scoreboard]     3
+# [final_phase]     2
+# [int_tx_done_100M_test]    10
+# [phy_agent]     1
+# [phy_monitor]     1
+# [run_phase]    38
+# 
+# ** Note: $finish    : /home/venus/QuestaSim/uvm-1.2/src/base/uvm_root.svh(517)
+#    Time: 6945 ns  Iteration: 72  Instance: /testbench
+# Saving coverage database on exit...
+# End time: 13:41:23 on Jun 20,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 0

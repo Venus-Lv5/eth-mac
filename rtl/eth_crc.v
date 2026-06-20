@@ -8,7 +8,7 @@ module eth_crc (
     input wire              i_clk,
     input wire              i_rst_n,
 
-    input wire [3:0]        i_data,     // 4-bit data input (LSB first)
+    input wire [3:0]        i_data,     // 4-bit data input, bit 0 is serial first
     input wire              i_enable,   // Enable CRC calculation
     input wire              i_init,     // Initialize CRC to all-1s
 
@@ -21,48 +21,52 @@ module eth_crc (
     // =========================================================
     // Parallel CRC calculation (4 bits per cycle)
     // Generated from CRC-32 polynomial for Ethernet
-    // Format: CrcNext = f(Data, Crc) when Enable=1, else CrcNext = Crc
+    // Format: CrcNext = f(Data, Crc) when Enable=1.
+    // When Enable=0, the CRC register holds its value.
 
+    wire [31:0] w_crc_calc;
     wire [31:0] w_crc_next;
 
-    assign w_crc_next[0]  = i_enable & (i_data[0] ^ o_crc[28]);
-    assign w_crc_next[1]  = i_enable & (i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29]);
-    assign w_crc_next[2]  = i_enable & (i_data[2] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[30]);
-    assign w_crc_next[3]  = i_enable & (i_data[3] ^ i_data[2] ^ i_data[1] ^ o_crc[29] ^ o_crc[30] ^ o_crc[31]);
-    assign w_crc_next[4]  = (i_enable & (i_data[3] ^ i_data[2] ^ i_data[0] ^ o_crc[28] ^ o_crc[30] ^ o_crc[31])) ^ o_crc[0];
-    assign w_crc_next[5]  = (i_enable & (i_data[3] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[31])) ^ o_crc[1];
-    assign w_crc_next[6]  = (i_enable & (i_data[2] ^ i_data[1] ^ o_crc[29] ^ o_crc[30])) ^ o_crc[2];
-    assign w_crc_next[7]  = (i_enable & (i_data[3] ^ i_data[2] ^ i_data[0] ^ o_crc[28] ^ o_crc[30] ^ o_crc[31])) ^ o_crc[3];
-    assign w_crc_next[8]  = (i_enable & (i_data[3] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[31])) ^ o_crc[4];
-    assign w_crc_next[9]  = (i_enable & (i_data[2] ^ i_data[1] ^ o_crc[29] ^ o_crc[30])) ^ o_crc[5];
-    assign w_crc_next[10] = (i_enable & (i_data[3] ^ i_data[2] ^ i_data[0] ^ o_crc[28] ^ o_crc[30] ^ o_crc[31])) ^ o_crc[6];
-    assign w_crc_next[11] = (i_enable & (i_data[3] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[31])) ^ o_crc[7];
-    assign w_crc_next[12] = (i_enable & (i_data[2] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[30])) ^ o_crc[8];
-    assign w_crc_next[13] = (i_enable & (i_data[3] ^ i_data[2] ^ i_data[1] ^ o_crc[29] ^ o_crc[30] ^ o_crc[31])) ^ o_crc[9];
-    assign w_crc_next[14] = (i_enable & (i_data[3] ^ i_data[2] ^ o_crc[30] ^ o_crc[31])) ^ o_crc[10];
-    assign w_crc_next[15] = (i_enable & (i_data[3] ^ o_crc[31])) ^ o_crc[11];
-    assign w_crc_next[16] = (i_enable & (i_data[0] ^ o_crc[28])) ^ o_crc[12];
-    assign w_crc_next[17] = (i_enable & (i_data[1] ^ o_crc[29])) ^ o_crc[13];
-    assign w_crc_next[18] = (i_enable & (i_data[2] ^ o_crc[30])) ^ o_crc[14];
-    assign w_crc_next[19] = (i_enable & (i_data[3] ^ o_crc[31])) ^ o_crc[15];
-    assign w_crc_next[20] = o_crc[16];
-    assign w_crc_next[21] = o_crc[17];
-    assign w_crc_next[22] = (i_enable & (i_data[0] ^ o_crc[28])) ^ o_crc[18];
-    assign w_crc_next[23] = (i_enable & (i_data[1] ^ i_data[0] ^ o_crc[29] ^ o_crc[28])) ^ o_crc[19];
-    assign w_crc_next[24] = (i_enable & (i_data[2] ^ i_data[1] ^ o_crc[30] ^ o_crc[29])) ^ o_crc[20];
-    assign w_crc_next[25] = (i_enable & (i_data[3] ^ i_data[2] ^ o_crc[31] ^ o_crc[30])) ^ o_crc[21];
-    assign w_crc_next[26] = (i_enable & (i_data[3] ^ i_data[0] ^ o_crc[31] ^ o_crc[28])) ^ o_crc[22];
-    assign w_crc_next[27] = (i_enable & (i_data[1] ^ o_crc[29])) ^ o_crc[23];
-    assign w_crc_next[28] = (i_enable & (i_data[2] ^ o_crc[30])) ^ o_crc[24];
-    assign w_crc_next[29] = (i_enable & (i_data[3] ^ o_crc[31])) ^ o_crc[25];
-    assign w_crc_next[30] = o_crc[26];
-    assign w_crc_next[31] = o_crc[27];
+    assign w_crc_calc[0]  = i_data[0] ^ o_crc[28];
+    assign w_crc_calc[1]  = i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29];
+    assign w_crc_calc[2]  = i_data[2] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[30];
+    assign w_crc_calc[3]  = i_data[3] ^ i_data[2] ^ i_data[1] ^ o_crc[29] ^ o_crc[30] ^ o_crc[31];
+    assign w_crc_calc[4]  = i_data[3] ^ i_data[2] ^ i_data[0] ^ o_crc[28] ^ o_crc[30] ^ o_crc[31] ^ o_crc[0];
+    assign w_crc_calc[5]  = i_data[3] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[31] ^ o_crc[1];
+    assign w_crc_calc[6]  = i_data[2] ^ i_data[1] ^ o_crc[29] ^ o_crc[30] ^ o_crc[2];
+    assign w_crc_calc[7]  = i_data[3] ^ i_data[2] ^ i_data[0] ^ o_crc[28] ^ o_crc[30] ^ o_crc[31] ^ o_crc[3];
+    assign w_crc_calc[8]  = i_data[3] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[31] ^ o_crc[4];
+    assign w_crc_calc[9]  = i_data[2] ^ i_data[1] ^ o_crc[29] ^ o_crc[30] ^ o_crc[5];
+    assign w_crc_calc[10] = i_data[3] ^ i_data[2] ^ i_data[0] ^ o_crc[28] ^ o_crc[30] ^ o_crc[31] ^ o_crc[6];
+    assign w_crc_calc[11] = i_data[3] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[31] ^ o_crc[7];
+    assign w_crc_calc[12] = i_data[2] ^ i_data[1] ^ i_data[0] ^ o_crc[28] ^ o_crc[29] ^ o_crc[30] ^ o_crc[8];
+    assign w_crc_calc[13] = i_data[3] ^ i_data[2] ^ i_data[1] ^ o_crc[29] ^ o_crc[30] ^ o_crc[31] ^ o_crc[9];
+    assign w_crc_calc[14] = i_data[3] ^ i_data[2] ^ o_crc[30] ^ o_crc[31] ^ o_crc[10];
+    assign w_crc_calc[15] = i_data[3] ^ o_crc[31] ^ o_crc[11];
+    assign w_crc_calc[16] = i_data[0] ^ o_crc[28] ^ o_crc[12];
+    assign w_crc_calc[17] = i_data[1] ^ o_crc[29] ^ o_crc[13];
+    assign w_crc_calc[18] = i_data[2] ^ o_crc[30] ^ o_crc[14];
+    assign w_crc_calc[19] = i_data[3] ^ o_crc[31] ^ o_crc[15];
+    assign w_crc_calc[20] = o_crc[16];
+    assign w_crc_calc[21] = o_crc[17];
+    assign w_crc_calc[22] = i_data[0] ^ o_crc[28] ^ o_crc[18];
+    assign w_crc_calc[23] = i_data[1] ^ i_data[0] ^ o_crc[29] ^ o_crc[28] ^ o_crc[19];
+    assign w_crc_calc[24] = i_data[2] ^ i_data[1] ^ o_crc[30] ^ o_crc[29] ^ o_crc[20];
+    assign w_crc_calc[25] = i_data[3] ^ i_data[2] ^ o_crc[31] ^ o_crc[30] ^ o_crc[21];
+    assign w_crc_calc[26] = i_data[3] ^ i_data[0] ^ o_crc[31] ^ o_crc[28] ^ o_crc[22];
+    assign w_crc_calc[27] = i_data[1] ^ o_crc[29] ^ o_crc[23];
+    assign w_crc_calc[28] = i_data[2] ^ o_crc[30] ^ o_crc[24];
+    assign w_crc_calc[29] = i_data[3] ^ o_crc[31] ^ o_crc[25];
+    assign w_crc_calc[30] = o_crc[26];
+    assign w_crc_calc[31] = o_crc[27];
+
+    assign w_crc_next = i_enable ? w_crc_calc : o_crc;
 
     // =========================================================
     // CRC REGISTER (32-bit)
     // =========================================================
     // Reset or Initialize: all-1s (IEEE 802.3 standard seed)
-    // Update: shift in new CRC from parallel calculation
+    // Update: calculate next CRC when enabled, otherwise hold.
 
     reg [31:0] r_crc;
 

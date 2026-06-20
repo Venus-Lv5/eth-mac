@@ -17,6 +17,7 @@ module eth_rx_addr_check (
 
     // Byte count flags (from eth_rx_cnt)
     input  wire        i_byte_eq_0,
+    input  wire        i_byte_eq_1,
     input  wire        i_byte_eq_2,
     input  wire        i_byte_eq_3,
     input  wire        i_byte_eq_4,
@@ -39,23 +40,25 @@ module eth_rx_addr_check (
     input  wire        i_rx_end_frm,       // End of frame
     input  wire        i_pro,               // PRO bit - Promiscuous mode
     input  wire        i_bro,               // BRO bit - Broadcast enable
+    input  wire        i_fil_en,            // FIL_EN bit - Multicast hash enable
     input  wire        i_pass_ctrl,          // PASS_CTRL bit - Forward control frame
     input  wire        i_ctrl_addr_ok,      // Control frame address OK (PAUSE frame)
 
     // Outputs
     output wire        o_rx_abort,          // Abort this frame
-    output wire        o_addr_miss           // Address miss (for RX BD)
+    output wire        o_addr_miss           // Address miss/debug status
 );
 
     //============================================================
     // Internal signals
     //============================================================
     wire        w_rx_check_en;              // Address checking enabled
+    wire        w_rx_byte_valid;            // Current byte is complete
     wire        w_broadcast_ok;             // Broadcast allowed
     wire        w_rx_addr_invalid;          // Address not match
     wire        w_hash_bit;                 // Hash table lookup result
     wire [31:0] w_int_hash;                // Selected hash register
-    wire [7:0]  w_byte_hash;               // Hash byte selection
+    reg  [7:0]  r_byte_hash;               // Hash byte selection
 
     reg         r_unicast_ok;              // Unicast address match
     reg         r_multicast_ok;            // Multicast address match
@@ -67,25 +70,27 @@ module eth_rx_addr_check (
     // Enable when RX FSM is in Data state
     //============================================================
     assign w_rx_check_en = |i_st_data;
+    assign w_rx_byte_valid = i_st_data[1];
 
     //============================================================
     // Broadcast detection
-    // BRO=0: allow broadcast, BRO=1: reject broadcast
+    // BRO=1: allow broadcast, BRO=0: reject broadcast
     //============================================================
-    assign w_broadcast_ok = i_broadcast & ~i_bro;
+    assign w_broadcast_ok = i_broadcast & i_bro;
 
     //============================================================
     // RxAbort logic
     // Abort when address doesn't match and not in promiscuous mode
     // Reported at end of address cycle, clears after one cycle
     //============================================================
-    assign w_rx_addr_invalid = ~(r_unicast_ok | w_broadcast_ok | 
-                                 r_multicast_ok | i_pro);
+    assign w_rx_addr_invalid = ~(r_unicast_ok | w_broadcast_ok |
+                                 r_multicast_ok | i_pro |
+                                 (i_pass_ctrl & i_ctrl_addr_ok));
 
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n)
             r_rx_abort <= 1'b0;
-        else if (w_rx_addr_invalid & i_byte_eq_7 & w_rx_check_en)
+        else if (w_rx_addr_invalid & i_byte_eq_7 & w_rx_byte_valid)
             r_rx_abort <= 1'b1;
         else
             r_rx_abort <= 1'b0;
@@ -94,43 +99,41 @@ module eth_rx_addr_check (
     assign o_rx_abort = r_rx_abort;
 
     //============================================================
-    // AddressMiss status
-    // Written to RX BD to indicate frame received due to promiscuous
-    // or control frame address match
+    // AddressMiss status.
+    // Set when frame is accepted only because PRO or control-frame path allowed it.
     //============================================================
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n)
             r_addr_miss <= 1'b0;
-        else if (i_byte_eq_0)
+        else if (i_byte_eq_0 & w_rx_byte_valid)
             r_addr_miss <= 1'b0;
-        else if (i_byte_eq_7 & w_rx_check_en)
-            r_addr_miss <= ~(r_unicast_ok | w_broadcast_ok | r_multicast_ok |
-                           (i_pass_ctrl & i_ctrl_addr_ok));
+        else if (i_byte_eq_7 & w_rx_byte_valid)
+            r_addr_miss <= ~(r_unicast_ok | w_broadcast_ok | r_multicast_ok);
     end
 
     assign o_addr_miss = r_addr_miss;
 
     //============================================================
     // Unicast address detection
-    // Compare 6 bytes of destination address with MAC address
-    // Start at ByteCntEq2 due to delay from RxData
+    // Compare 6 bytes of destination address with MAC address.
+    // Byte counter index 0..5 tuong ung DA byte 0..5.
     //============================================================
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n)
             r_unicast_ok <= 1'b0;
         else if (i_rx_end_frm | r_rx_abort)
             r_unicast_ok <= 1'b0;
-        else if (w_rx_check_en & i_byte_eq_2)
+        else if (w_rx_byte_valid & i_byte_eq_0)
             r_unicast_ok <= i_rx_data == i_mac_addr[47:40];
-        else if (w_rx_check_en & i_byte_eq_3)
+        else if (w_rx_byte_valid & i_byte_eq_1)
             r_unicast_ok <= (i_rx_data == i_mac_addr[39:32]) & r_unicast_ok;
-        else if (w_rx_check_en & i_byte_eq_4)
+        else if (w_rx_byte_valid & i_byte_eq_2)
             r_unicast_ok <= (i_rx_data == i_mac_addr[31:24]) & r_unicast_ok;
-        else if (w_rx_check_en & i_byte_eq_5)
+        else if (w_rx_byte_valid & i_byte_eq_3)
             r_unicast_ok <= (i_rx_data == i_mac_addr[23:16]) & r_unicast_ok;
-        else if (w_rx_check_en & i_byte_eq_6)
+        else if (w_rx_byte_valid & i_byte_eq_4)
             r_unicast_ok <= (i_rx_data == i_mac_addr[15:8]) & r_unicast_ok;
-        else if (w_rx_check_en & i_byte_eq_7)
+        else if (w_rx_byte_valid & i_byte_eq_5)
             r_unicast_ok <= (i_rx_data == i_mac_addr[7:0]) & r_unicast_ok;
     end
 
@@ -144,15 +147,16 @@ module eth_rx_addr_check (
     // Select byte from hash register
     always @(i_crc_hash or w_int_hash) begin
         case (i_crc_hash[4:3])
-            2'b00: w_byte_hash = w_int_hash[7:0];
-            2'b01: w_byte_hash = w_int_hash[15:8];
-            2'b10: w_byte_hash = w_int_hash[23:16];
-            2'b11: w_byte_hash = w_int_hash[31:24];
+            2'b00: r_byte_hash = w_int_hash[7:0];
+            2'b01: r_byte_hash = w_int_hash[15:8];
+            2'b10: r_byte_hash = w_int_hash[23:16];
+            2'b11: r_byte_hash = w_int_hash[31:24];
+            default: r_byte_hash = 8'h00;
         endcase
     end
 
     // Select bit from byte
-    assign w_hash_bit = w_byte_hash[i_crc_hash[2:0]];
+    assign w_hash_bit = r_byte_hash[i_crc_hash[2:0]];
 
     // MulticastOK register
     always @(posedge i_clk or negedge i_rst_n) begin
@@ -161,7 +165,9 @@ module eth_rx_addr_check (
         else if (i_rx_end_frm | r_rx_abort)
             r_multicast_ok <= 1'b0;
         else if (i_crc_hash_good & i_multicast)
-            r_multicast_ok <= w_hash_bit;
+            r_multicast_ok <= i_fil_en & ~i_broadcast & w_hash_bit;
+        else if (i_crc_hash_good)
+            r_multicast_ok <= 1'b0;
     end
 
 endmodule

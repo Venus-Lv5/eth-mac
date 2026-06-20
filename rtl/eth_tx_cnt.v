@@ -3,7 +3,10 @@
 // eth_tx_cnt.v
 // TX counters for IEEE 802.3 CSMA/CD transmission
 // Based on ethmac eth_txcounters.v
-// REMOVED per DESIGN_NOTES.md: HugEn, ExDfrEn, DlyCrcEn, configurable MinFL/MaxFL
+// Buffer-based version:
+// - Min frame and max frame are fixed.
+// - i_st_data[0] is low nibble of current byte.
+// - i_st_data[1] is high nibble of current byte.
 
 module eth_tx_cnt (
     input  wire        i_clk,
@@ -41,15 +44,18 @@ module eth_tx_cnt (
     output wire        o_excessive_defer
 );
 
-    // Fixed parameters (per DESIGN_NOTES.md)
+    // Fixed parameters.
     parameter [15:0] MIN_FL = 16'd64;
     parameter [15:0] MAX_FL = 16'd1518;
     parameter [13:0] EXCESSIVE_DEF_CNT = 14'h17B7;
 
+    wire w_data_any  = |i_st_data;
+    wire w_data_high = i_st_data[1];
+
     //============================================================
     // Nibble counter
     //============================================================
-    wire w_nib_inc = i_st_ipg | i_st_preamble | (|i_st_data) | i_st_pad
+    wire w_nib_inc = i_st_ipg | i_st_preamble | w_data_any | i_st_pad
                    | i_st_fcs | i_st_jam | i_st_backoff
                    | (i_st_defer & ~o_excessive_defer & i_tx_start_frm);
 
@@ -75,17 +81,20 @@ module eth_tx_cnt (
     assign o_nib_eq_7  = &r_nib_cnt[2:0];   // NibCnt == 7
     assign o_nib_eq_15 = &r_nib_cnt[3:0];   // NibCnt == 15
 
-    // Nibble >= MinFL (excluding FCS = 4 bytes)
-    // Formula from original: (((MinFL-4) << 1) - 1) = (60 << 1) - 1 = 119
+    // Nibble >= MinFL before FCS.
+    // Ethernet min frame is 64 bytes including FCS.
+    // MAC must have at least 60 bytes before FCS.
+    // 60 bytes = 120 nibbles, count value 119 means enough.
     assign o_nib_min_fl = r_nib_cnt >= (((MIN_FL - 16'd4) << 1) - 16'd1);
 
-    // Excessive defer detection (always enabled per DESIGN_NOTES)
+    // Excessive defer detection is always enabled.
     assign o_excessive_defer = r_nib_cnt[13:0] == EXCESSIVE_DEF_CNT;
 
     //============================================================
     // Byte counter
     //============================================================
-    wire w_byte_inc = (i_st_data[1] & ~o_byte_max)
+    // Byte count increments after high nibble, or every 2 pad/FCS nibbles.
+    wire w_byte_inc = (w_data_high & ~o_byte_max)
                     | (i_st_backoff & &r_nib_cnt[6:0])
                     | ((i_st_pad | i_st_fcs) & r_nib_cnt[0] & ~o_byte_max);
 

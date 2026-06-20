@@ -1,291 +1,197 @@
 `timescale 1ns/1ps
-//==============================================================================
-// Module: eth_tx_pause
-// Description: TX PAUSE frame generator (IEEE 802.3x Flow Control)
-// Author: Custom Ethernet MAC
-// Reference: ethmac eth_transmitcontrol.v
-//==============================================================================
-//
-// Overview:
-// --------
-// This module generates and transmits PAUSE frames when flow control is enabled.
-// A PAUSE frame instructs remote devices to temporarily stop transmitting.
-//
-// NOTE: CDC (Clock Domain Crossing) is handled in the top-level module.
-// This module assumes all inputs are already synchronized to i_mtx_clk domain.
-//
-// PAUSE Frame Structure (46 bytes):
-// ----------------------------------
-// Byte 0-5:   01:80:C2:00:00:01  (Reserved Multicast Destination Address)
-// Byte 6-11:  Source MAC Address (from MAC_ADDR register)
-// Byte 12-13: 88:08              (MAC Control Type)
-// Byte 14-15: 00:01              (PAUSE Opcode)
-// Byte 16-17: Pause Timer Value  (from TX_FLOW register)
-// Byte 18-45: Padding (to meet minimum 64-byte frame)
-// Byte 46-49: CRC-32            (added by TX MAC)
-//
-// Flow:
-// -----
-// 1. Latch PAUSE request (WillSendControlFrame)
-// 2. Wait for TX channel idle
-// 3. Assert CtrlMux to select control data
-// 4. Generate PAUSE frame data (ByteCnt 0->34)
-// 5. Assert TxCtrlEndFrm when complete
-// 6. Block TX interrupt during control frame transmission
-//
-// Removed from original:
-// ----------------------
-// - DLYCRCEN logic (CRC always calculated after SFD per IEEE 802.3)
-//==============================================================================
 
-module eth_tx_pause (
-    // Global
-    input  wire        i_mtx_clk,
-    input  wire        i_hresetn,
+//------------------------------------------------------------------------------
+// TX PAUSE frame controller
+//
+// Chuc nang:
+// - Dong bo pause request level tu RX side sang TX clock.
+// - Khi pause request doi trang thai, yeu cau top cho quyen gui PAUSE frame.
+// - Tao byte stream PAUSE frame cho eth_tx_mac.
+// - PAUSE request = 1 gui pause time FFFF.
+// - PAUSE request = 0 gui pause time 0000 de release remote.
+//
+// Module nay khong tu mux voi normal TX data. Top-level se uu tien PAUSE frame
+// khi o_pause_request = 1 va TX MAC dang idle.
+//------------------------------------------------------------------------------
+module eth_tx_pause #(
+    parameter [15:0] PAUSE_TIME = 16'hFFFF
+) (
+    input  wire        i_clk,
+    input  wire        i_rst_n,
 
-    // From register (already synchronized to i_mtx_clk domain)
-    input  wire        i_tpause_rq,      // PAUSE request (CDC handled in top)
-    input  wire        i_tx_flow,         // TX flow control enable (CDC handled in top)
-    input  wire [15:0] i_tx_pause_tv,     // PAUSE timer value (CDC handled in top)
-    input  wire [47:0] i_mac_addr,        // Source MAC address (CDC handled in top)
+    input  wire        i_tx_pause_en,
+    input  wire        i_pause_req_rx,
+    input  wire [47:0] i_mac_sa,
 
-    // TX status (from TX MAC)
-    input  wire        i_tx_done,          // TX done
-    input  wire        i_tx_abort,         // TX abort
-    input  wire        i_tx_start_frm,     // Start normal frame
-    input  wire        i_tx_used_data,     // TX MAC consuming data
+    input  wire        i_start,
 
-    // To TX MAC
-    output reg         o_tx_ctrl_start,    // Control frame start
-    output reg         o_tx_ctrl_end,      // Control frame end
-    output reg         o_ctrl_mux,         // Select control data
-    output reg         o_sending_ctrl,     // Sending control frame (enables PAD/CRC)
-    output wire  [7:0] o_ctrl_data,        // Control frame byte data
-    output reg         o_block_tx_done,    // Block TX done interrupt
+    output wire        o_pause_req_tx,
+    output wire        o_pause_request,
+    output wire        o_active,
 
-    // Status
-    output reg         o_ctrl_done         // Control frame transmission complete
+    output wire        o_mac_start,
+    output wire        o_mac_end,
+    output reg  [7:0]  o_mac_data,
+    output wire        o_mac_pad_en,
+    output wire        o_mac_crc_en,
+    output wire        o_mac_underrun,
+
+    input  wire        i_mac_used_data,
+    input  wire        i_mac_done,
+    input  wire        i_mac_retry,
+    input  wire        i_mac_abort,
+
+    output reg         o_pause_done_pulse,
+    output reg         o_pause_err_pulse
 );
 
-//==============================================================================
-// Local parameters
-//==============================================================================
-localparam BYTE_CNT_MAX = 6'h22;  // 34 - PAUSE frame is 35 bytes (counted twice)
+    localparam [1:0]
+        ST_IDLE        = 2'd0,
+        ST_SEND        = 2'd1,
+        ST_RESTART_GAP = 2'd2;
 
-//==============================================================================
-// Internal signals
-//==============================================================================
-reg         r_will_send_ctrl;      // Latched PAUSE request
-reg         r_tx_ctrl_start_q;      // Delayed start pulse
-reg         r_tx_ctrl_end_q;        // Delayed end pulse
-reg         r_tpause_rq_q;          // Delayed request for edge detection
-reg         r_tpause_rq_q2;         // Previous request for edge detection
+    localparam [47:0] PAUSE_DA     = 48'h0180C2000001;
+    localparam [15:0] PAUSE_TYPE   = 16'h8808;
+    localparam [15:0] PAUSE_OPCODE = 16'h0001;
+    localparam [5:0]  LAST_BYTE    = 6'd17;
 
-// Byte counter
-reg  [5:0]  r_byte_cnt;
+    reg [1:0]  r_state;
+    reg [5:0]  r_byte_index;
+    reg        r_sent_pause_level;
+    reg        r_frame_pause_level;
+    reg [15:0] r_frame_pause_time;
 
-// Muxed control data
-reg  [7:0]  r_muxed_ctrl_data;
-reg  [7:0]  r_ctrl_data_latch;
+    reg        r_pause_req_s1;
+    reg        r_pause_req_s2;
+    reg        r_pause_req_s3;
 
-//==============================================================================
-// Edge detector for PAUSE request
-// Detects rising edge on i_tpause_rq
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn) begin
-        r_tpause_rq_q  <= 1'b0;
-        r_tpause_rq_q2 <= 1'b0;
-    end else begin
-        r_tpause_rq_q  <= i_tpause_rq;
-        r_tpause_rq_q2 <= r_tpause_rq_q;
+    reg        r_mac_done_d;
+    reg        r_mac_retry_d;
+    reg        r_mac_abort_d;
+
+    wire       w_mac_done_pulse;
+    wire       w_mac_retry_pulse;
+    wire       w_mac_abort_pulse;
+    wire       w_desired_pause_level;
+    wire       w_need_send;
+
+    // Level CDC tu RX side sang TX clock.
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n) begin
+            r_pause_req_s1 <= 1'b0;
+            r_pause_req_s2 <= 1'b0;
+            r_pause_req_s3 <= 1'b0;
+        end else begin
+            r_pause_req_s1 <= i_pause_req_rx;
+            r_pause_req_s2 <= r_pause_req_s1;
+            r_pause_req_s3 <= r_pause_req_s2;
+        end
     end
-end
 
-wire w_tpause_rq_edge;
-assign w_tpause_rq_edge = i_tpause_rq & ~r_tpause_rq_q;  // Rising edge
+    assign o_pause_req_tx = r_pause_req_s3;
+    assign w_desired_pause_level = i_tx_pause_en & r_pause_req_s3;
+    assign w_need_send = (w_desired_pause_level != r_sent_pause_level);
+    assign o_pause_request = (r_state == ST_IDLE) & w_need_send;
 
-//==============================================================================
-// WillSendControlFrame: Latch PAUSE request
-// Cleared when control frame transmission ends
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn)
-        r_will_send_ctrl <= 1'b0;
-    else if (o_tx_ctrl_end & o_ctrl_mux)
-        r_will_send_ctrl <= 1'b0;
-    else if (w_tpause_rq_edge & i_tx_flow)
-        r_will_send_ctrl <= 1'b1;
-end
-
-//==============================================================================
-// TxCtrlStartFrm: Generate start frame pulse
-// Starts when: will send ctrl frame AND channel is idle
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn)
-        o_tx_ctrl_start <= 1'b0;
-    else if (r_will_send_ctrl &
-             ~i_tx_used_data &
-             (i_tx_done | i_tx_abort | i_tx_start_frm))
-        o_tx_ctrl_start <= 1'b1;
-    else
-        o_tx_ctrl_start <= 1'b0;
-end
-
-//==============================================================================
-// CtrlMux: Control data multiplexer
-// When asserted, TX MAC uses control frame data instead of normal data
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn)
-        o_ctrl_mux <= 1'b0;
-    else if (r_will_send_ctrl & ~i_tx_used_data)
-        o_ctrl_mux <= 1'b1;
-    else if (i_tx_done)
-        o_ctrl_mux <= 1'b0;
-end
-
-//==============================================================================
-// SendingCtrlFrm: Enable padding and CRC for control frame
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn)
-        o_sending_ctrl <= 1'b0;
-    else if (r_will_send_ctrl & o_tx_ctrl_start)
-        o_sending_ctrl <= 1'b1;
-    else if (i_tx_done)
-        o_sending_ctrl <= 1'b0;
-end
-
-//==============================================================================
-// BlockTxDone: Block TX done interrupt during control frame transmission
-// Prevents premature TXB_IRQ when switching to control frame
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn)
-        o_block_tx_done <= 1'b0;
-    else if (o_tx_ctrl_start)
-        o_block_tx_done <= 1'b1;
-    else if (i_tx_start_frm)
-        o_block_tx_done <= 1'b0;
-end
-
-//==============================================================================
-// Byte counter: Counts bytes in control frame
-// Frame is 35 bytes (0x00 to 0x22)
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn) begin
-        r_byte_cnt <= 6'h0;
-    end else if (~o_tx_ctrl_start & (i_tx_done | i_tx_abort)) begin
-        r_byte_cnt <= 6'h0;                    // Reset when frame ends
-    end else if (o_ctrl_mux & i_tx_used_data) begin
-        r_byte_cnt <= r_byte_cnt + 1'b1;      // Count on each byte consumed
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n) begin
+            r_mac_done_d <= 1'b0;
+            r_mac_retry_d <= 1'b0;
+            r_mac_abort_d <= 1'b0;
+        end else begin
+            r_mac_done_d <= i_mac_done;
+            r_mac_retry_d <= i_mac_retry;
+            r_mac_abort_d <= i_mac_abort;
+        end
     end
-end
 
-// Detect end of control frame (byte count reached 0x22)
-wire w_ctrl_end;
-assign w_ctrl_end = (r_byte_cnt == BYTE_CNT_MAX);
+    assign w_mac_done_pulse  = i_mac_done  & ~r_mac_done_d;
+    assign w_mac_retry_pulse = i_mac_retry & ~r_mac_retry_d;
+    assign w_mac_abort_pulse = i_mac_abort & ~r_mac_abort_d;
 
-//==============================================================================
-// TxCtrlEndFrm: Generate end frame pulse
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn) begin
-        o_tx_ctrl_end   <= 1'b0;
-        r_tx_ctrl_end_q <= 1'b0;
-    end else begin
-        r_tx_ctrl_end_q <= w_ctrl_end;
-        o_tx_ctrl_end   <= w_ctrl_end | r_tx_ctrl_end_q;
+    // Byte mux cho PAUSE frame, byte lon truoc.
+    always @(*) begin
+        case (r_byte_index)
+            6'd0:  o_mac_data = PAUSE_DA[47:40];
+            6'd1:  o_mac_data = PAUSE_DA[39:32];
+            6'd2:  o_mac_data = PAUSE_DA[31:24];
+            6'd3:  o_mac_data = PAUSE_DA[23:16];
+            6'd4:  o_mac_data = PAUSE_DA[15:8];
+            6'd5:  o_mac_data = PAUSE_DA[7:0];
+            6'd6:  o_mac_data = i_mac_sa[47:40];
+            6'd7:  o_mac_data = i_mac_sa[39:32];
+            6'd8:  o_mac_data = i_mac_sa[31:24];
+            6'd9:  o_mac_data = i_mac_sa[23:16];
+            6'd10: o_mac_data = i_mac_sa[15:8];
+            6'd11: o_mac_data = i_mac_sa[7:0];
+            6'd12: o_mac_data = PAUSE_TYPE[15:8];
+            6'd13: o_mac_data = PAUSE_TYPE[7:0];
+            6'd14: o_mac_data = PAUSE_OPCODE[15:8];
+            6'd15: o_mac_data = PAUSE_OPCODE[7:0];
+            6'd16: o_mac_data = r_frame_pause_time[15:8];
+            6'd17: o_mac_data = r_frame_pause_time[7:0];
+            default: o_mac_data = 8'h00;
+        endcase
     end
-end
 
-// Control done status
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn)
-        o_ctrl_done <= 1'b0;
-    else
-        o_ctrl_done <= o_tx_ctrl_end;
-end
+    assign o_active = (r_state != ST_IDLE);
+    assign o_mac_start = (r_state == ST_SEND);
+    assign o_mac_end = (r_state == ST_SEND) & (r_byte_index == LAST_BYTE);
+    assign o_mac_pad_en = 1'b1;
+    assign o_mac_crc_en = 1'b1;
+    assign o_mac_underrun = 1'b0;
 
-// Delayed start for edge detection
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn)
-        r_tx_ctrl_start_q <= 1'b0;
-    else
-        r_tx_ctrl_start_q <= o_tx_ctrl_start;
-end
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n) begin
+            r_state <= ST_IDLE;
+            r_byte_index <= 6'd0;
+            r_sent_pause_level <= 1'b0;
+            r_frame_pause_level <= 1'b0;
+            r_frame_pause_time <= 16'd0;
+            o_pause_done_pulse <= 1'b0;
+            o_pause_err_pulse <= 1'b0;
+        end else begin
+            o_pause_done_pulse <= 1'b0;
+            o_pause_err_pulse <= 1'b0;
 
-//==============================================================================
-// Control data generation: PAUSE frame byte values
-// Reference: IEEE 802.3 Table 31B-1
-//==============================================================================
-always @(r_byte_cnt or i_mac_addr or i_tx_pause_tv) begin
-    case (r_byte_cnt)
-        // Destination Address: 01:80:C2:00:00:01 (Reserved Multicast)
-        6'h00: r_muxed_ctrl_data = 8'h01;
-        6'h01: r_muxed_ctrl_data = 8'h80;
-        6'h02: r_muxed_ctrl_data = 8'hC2;
-        6'h03: r_muxed_ctrl_data = 8'h00;
-        6'h04: r_muxed_ctrl_data = 8'h00;
-        6'h05: r_muxed_ctrl_data = 8'h01;
+            case (r_state)
+                ST_IDLE: begin
+                    r_byte_index <= 6'd0;
 
-        // Source MAC Address (from register)
-        6'h06: r_muxed_ctrl_data = i_mac_addr[47:40];
-        6'h07: r_muxed_ctrl_data = i_mac_addr[39:32];
-        6'h08: r_muxed_ctrl_data = i_mac_addr[31:24];
-        6'h09: r_muxed_ctrl_data = i_mac_addr[23:16];
-        6'h0A: r_muxed_ctrl_data = i_mac_addr[15:8];
-        6'h0B: r_muxed_ctrl_data = i_mac_addr[7:0];
+                    if (i_start & w_need_send) begin
+                        r_frame_pause_level <= w_desired_pause_level;
+                        r_frame_pause_time <= w_desired_pause_level ? PAUSE_TIME : 16'd0;
+                        r_state <= ST_SEND;
+                    end
+                end
 
-        // Type/Length: 0x8808 (MAC Control)
-        6'h0C: r_muxed_ctrl_data = 8'h88;
-        6'h0D: r_muxed_ctrl_data = 8'h08;
+                ST_SEND: begin
+                    if (w_mac_abort_pulse) begin
+                        o_pause_err_pulse <= 1'b1;
+                        r_byte_index <= 6'd0;
+                        r_state <= ST_IDLE;
+                    end else if (w_mac_retry_pulse) begin
+                        r_byte_index <= 6'd0;
+                        r_state <= ST_RESTART_GAP;
+                    end else if (w_mac_done_pulse) begin
+                        o_pause_done_pulse <= 1'b1;
+                        r_sent_pause_level <= r_frame_pause_level;
+                        r_byte_index <= 6'd0;
+                        r_state <= ST_IDLE;
+                    end else if (i_mac_used_data & (r_byte_index != LAST_BYTE)) begin
+                        r_byte_index <= r_byte_index + 6'd1;
+                    end
+                end
 
-        // Opcode: 0x0001 (PAUSE)
-        6'h0E: r_muxed_ctrl_data = 8'h00;
-        6'h0F: r_muxed_ctrl_data = 8'h01;
+                ST_RESTART_GAP: begin
+                    r_state <= ST_SEND;
+                end
 
-        // PAUSE Timer Value (from register)
-        6'h10: r_muxed_ctrl_data = i_tx_pause_tv[15:8];
-        6'h11: r_muxed_ctrl_data = i_tx_pause_tv[7:0];
-
-        // Padding (bytes 18-33): zeros for minimum frame size
-        6'h12,
-        6'h13,
-        6'h14,
-        6'h15,
-        6'h16,
-        6'h17,
-        6'h18,
-        6'h19,
-        6'h1A,
-        6'h1B,
-        6'h1C,
-        6'h1D,
-        6'h1E,
-        6'h1F,
-        6'h20,
-        6'h21,
-        6'h22: r_muxed_ctrl_data = 8'h00;
-
-        default: r_muxed_ctrl_data = 8'h00;
-    endcase
-end
-
-//==============================================================================
-// Control data latch: Latch data on even byte boundary
-// Ensures stable data during TX MAC operation
-//==============================================================================
-always @(posedge i_mtx_clk or negedge i_hresetn) begin
-    if (!i_hresetn)
-        r_ctrl_data_latch <= 8'h00;
-    else if (~r_byte_cnt[0])          // Latch on even byte (0, 2, 4...)
-        r_ctrl_data_latch <= r_muxed_ctrl_data;
-end
-
-assign o_ctrl_data = r_ctrl_data_latch;
+                default: begin
+                    r_state <= ST_IDLE;
+                end
+            endcase
+        end
+    end
 
 endmodule

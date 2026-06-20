@@ -1,0 +1,40 @@
+###########################################################
+####          Ethernet Regression Report               ####
+###########################################################
+Generated          : 2026-06-19 08:48:45
+Total testcase run : 26
+Passed             : 0
+Failed             : 26
+Unknown            : 0
+Used time          : 00h:00m:45s
+Functional coverage: unavailable
+Coverage goal      : 100%
+Merged UCDB        : regress_out/eth_regression_coverage.ucdb
+Coverage report    : regress_out/coverage.rpt
+-----------------------------------------------------------
+eth_reg_default_test               seed=1          FAIL    regress_out/log/eth_reg_default_test_1.log
+eth_reg_rw_test                    seed=1          FAIL    regress_out/log/eth_reg_rw_test_1.log
+full_100M_normal_uni_test          seed=1          FAIL    regress_out/log/full_100M_normal_uni_test_1.log
+full_10M_normal_uni_test           seed=1          FAIL    regress_out/log/full_10M_normal_uni_test_1.log
+full_100M_normal_bro_test          seed=1          FAIL    regress_out/log/full_100M_normal_bro_test_1.log
+full_10M_normal_bro_test           seed=1          FAIL    regress_out/log/full_10M_normal_bro_test_1.log
+full_100M_normal_multi_test        seed=1          FAIL    regress_out/log/full_100M_normal_multi_test_1.log
+full_10M_normal_multi_test         seed=1          FAIL    regress_out/log/full_10M_normal_multi_test_1.log
+full_100M_normal_pro_test          seed=1          FAIL    regress_out/log/full_100M_normal_pro_test_1.log
+full_10M_normal_pro_test           seed=1          FAIL    regress_out/log/full_10M_normal_pro_test_1.log
+full_100M_rx_pause_test            seed=1          FAIL    regress_out/log/full_100M_rx_pause_test_1.log
+full_10M_rx_pause_test             seed=1          FAIL    regress_out/log/full_10M_rx_pause_test_1.log
+full_100M_tx_pause_test            seed=1          FAIL    regress_out/log/full_100M_tx_pause_test_1.log
+full_10M_tx_pause_test             seed=1          FAIL    regress_out/log/full_10M_tx_pause_test_1.log
+int_tx_done_100M_test              seed=1          FAIL    regress_out/log/int_tx_done_100M_test_1.log
+int_tx_done_10M_test               seed=1          FAIL    regress_out/log/int_tx_done_10M_test_1.log
+int_tx_err_100M_test               seed=1          FAIL    regress_out/log/int_tx_err_100M_test_1.log
+int_tx_err_10M_test                seed=1          FAIL    regress_out/log/int_tx_err_10M_test_1.log
+int_rx_avail_100M_test             seed=1          FAIL    regress_out/log/int_rx_avail_100M_test_1.log
+int_rx_avail_10M_test              seed=1          FAIL    regress_out/log/int_rx_avail_10M_test_1.log
+int_rx_busy_100M_test              seed=1          FAIL    regress_out/log/int_rx_busy_100M_test_1.log
+int_rx_busy_10M_test               seed=1          FAIL    regress_out/log/int_rx_busy_10M_test_1.log
+int_rx_err_100M_test               seed=1          FAIL    regress_out/log/int_rx_err_100M_test_1.log
+int_rx_err_10M_test                seed=1          FAIL    regress_out/log/int_rx_err_10M_test_1.log
+int_rx_pause_seen_100M_test        seed=1          FAIL    regress_out/log/int_rx_pause_seen_100M_test_1.log
+int_rx_pause_seen_10M_test         seed=1          FAIL    regress_out/log/int_rx_pause_seen_10M_test_1.log

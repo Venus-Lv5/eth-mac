@@ -54,7 +54,8 @@ module eth_rx_controller (
         ST_IDLE     = 3'd1,
         ST_PREAMBLE = 3'd2,
         ST_SFD      = 3'd3,
-        ST_DATA     = 3'd4;
+        ST_DATA_LOW = 3'd4,
+        ST_DATA_HIGH = 3'd5;
 
     reg [2:0] r_state;
     reg [2:0] r_next;
@@ -64,6 +65,7 @@ module eth_rx_controller (
     wire w_rx_data_eq_d;    // RX data = 0xD (SFD)
     wire w_rx_active;       // MRxDV asserted
     wire w_carrier_sense;   // TX transmitting (collision in HDX)
+    wire w_continue_data;   // Continue to next byte
 
     //============================================================
     // Derived signals
@@ -79,20 +81,26 @@ module eth_rx_controller (
     // Next-state logic
     //============================================================
 
-    // StartPreamble: MRxDV=1, data!=0x5, IDLE, not transmitting
+    // StartPreamble: RX active nhung chua thay nibble 5 hop le.
+    // Giu cach tolerant cua RTL cu: neu bat dau lay mau giua preamble,
+    // MAC se hunt den khi thay 5 roi moi cho D.
     assign o_start_preamble = w_rx_active & ~w_rx_data_eq_5 &
                               (r_state == ST_IDLE) & ~w_carrier_sense;
 
-    // StartSFD: MRxDV=1, data=0x5, from IDLE or PREAMBLE
+    // StartSFD o day nghia la da thay nibble 5 ung vien.
     assign o_start_sfd = w_rx_active & w_rx_data_eq_5 &
-                         ((r_state == ST_IDLE & ~w_carrier_sense) |
-                          (r_state == ST_PREAMBLE));
+                         (((r_state == ST_IDLE) & ~w_carrier_sense) |
+                          (r_state == ST_PREAMBLE) |
+                          (r_state == ST_SFD));
 
-    // StartData: MRxDV=1, from SFD with IFG satisfied, or continuing
-    // Note: ~i_byte_max_frame added to stop Data state when MaxFL reached
+    // StartData: nibble D cua SFD sau nibble 5, IFG da hop le.
     assign o_start_data = w_rx_active &
-                          ((r_state == ST_SFD & w_rx_data_eq_d & i_ifg_eq_24) |
-                           (r_state == ST_DATA & ~i_byte_max_frame));
+                          (r_state == ST_SFD) &
+                          w_rx_data_eq_d &
+                          i_ifg_eq_24;
+    assign w_continue_data = w_rx_active &
+                             (r_state == ST_DATA_HIGH) &
+                             ~i_byte_max_frame;
 
     // RxAbort (drop frame): various error conditions
     assign o_rx_abort = w_rx_active &
@@ -100,9 +108,9 @@ module eth_rx_controller (
                             // Collision detected (HDX): TX active while receiving
                             ((r_state == ST_IDLE) & w_carrier_sense) |
                             // IFG violation during SFD
-                            ((r_state == ST_SFD) & ~i_ifg_eq_24 & w_rx_data_eq_d) |
+                            ((r_state == ST_SFD) & w_rx_data_eq_d & ~i_ifg_eq_24) |
                             // Frame too long
-                            ((r_state == ST_DATA) & i_byte_max_frame)
+                            (((r_state == ST_DATA_LOW) | (r_state == ST_DATA_HIGH)) & i_byte_max_frame)
                         );
 
     //============================================================
@@ -133,7 +141,8 @@ module eth_rx_controller (
             ST_IDLE:     o_state_idle    = 1'b1;
             ST_PREAMBLE: o_state_preamble = 1'b1;
             ST_SFD:      o_state_sfd     = 1'b1;
-            ST_DATA:     o_state_data    = 2'b11;  // Assert both data bits
+            ST_DATA_LOW:  o_state_data    = 2'b01;  // Low nibble
+            ST_DATA_HIGH: o_state_data    = 2'b10;  // High nibble
         endcase
     end
 
@@ -163,6 +172,8 @@ module eth_rx_controller (
             ST_PREAMBLE: begin
                 if (o_rx_abort)
                     r_next = ST_DROP;
+                else if (~i_rx_dv)
+                    r_next = ST_IDLE;
                 else if (o_start_sfd)
                     r_next = ST_SFD;
             end
@@ -171,15 +182,32 @@ module eth_rx_controller (
                 if (o_rx_abort)
                     r_next = ST_DROP;
                 else if (o_start_data)
-                    r_next = ST_DATA;
+                    r_next = ST_DATA_LOW;
+                else if (~i_rx_dv)
+                    r_next = ST_IDLE;
+                else if (o_start_sfd)
+                    r_next = ST_SFD;
+                else
+                    r_next = ST_PREAMBLE;
             end
 
-            ST_DATA: begin
+            ST_DATA_LOW: begin
+                if (o_rx_abort)
+                    r_next = ST_DROP;
+                else if (~i_rx_dv)
+                    r_next = ST_IDLE;
+                else
+                    r_next = ST_DATA_HIGH;
+            end
+
+            ST_DATA_HIGH: begin
                 if (o_rx_abort)
                     r_next = ST_DROP;
                 else if (~i_rx_dv)
                     // Frame ended normally
                     r_next = ST_IDLE;
+                else if (w_continue_data)
+                    r_next = ST_DATA_LOW;
             end
 
             default: r_next = ST_IDLE;

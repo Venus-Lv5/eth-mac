@@ -7,7 +7,7 @@
 // - No MII Management (PHY pre-configured)
 // - No configurable IPG timing (PHY handles)
 // - No HugEn, DlyCrcEn, NoBckof, ExDfrEn
-// - PAD/CRC from TX BD (per-packet)
+// - PAD/CRC from TX buffer controller
 // - Fixed: MinFL=64, MaxFL=1518, MaxRet=15, CollValid=63
 
 `timescale 1ns/1ps
@@ -17,13 +17,14 @@ module eth_tx_mac (
     input  wire        i_clk,
     input  wire        i_rst_n,
 
-    // TX Frame Control (from TX DMA)
+    // TX Frame Control (from TX buffer controller)
     input  wire        i_tx_start,      // Start frame
     input  wire        i_tx_end,        // End frame
-    input  wire        i_tx_underrun,  // FIFO empty
+    input  wire        i_tx_underrun,  // TX byte source underrun
     input  wire [7:0]  i_tx_data,       // TX data byte
 
-    // Per-packet config (from TX BD)
+    // Per-frame config.
+    // Trong buffer_based, top/controller se noi 2 tin hieu nay = 1.
     input  wire        i_pad_en,        // Enable padding
     input  wire        i_crc_en,        // Enable CRC
 
@@ -39,11 +40,11 @@ module eth_tx_mac (
     output wire        o_mtx_en,         // TX enable
     output wire        o_mtx_err,        // TX error
 
-    // Status (to TX DMA / Registers)
+    // Status (to TX buffer controller / Registers)
     output wire        o_tx_done,        // Frame transmitted OK
     output wire        o_tx_retry,       // Frame needs retry
     output wire        o_tx_abort,       // Frame aborted
-    output wire        o_tx_used_data,   // FIFO data consumed
+    output wire        o_tx_used_data,   // One byte consumed
 
     // Status for statistics
     output wire        o_defer_ind,      // Deferred due to carrier
@@ -94,17 +95,17 @@ module eth_tx_mac (
     wire        w_max_frame;
     wire        w_excessive_defer;
     wire        w_state_sfd;
-    wire        w_byte_max;
 
     // Collision handling
     wire        w_col_window;            // Inside collision window
-    wire        w_under_run;            // FIFO underrun during data
+    wire        w_collision_active;      // Collision only matters in half-duplex
+    wire        w_under_run;            // Byte source underrun during data
     wire        w_too_big;              // Frame > MaxFL
     wire        w_retry_max;
     wire        w_late_collision;
     wire        w_max_collision_occured;
     wire        w_excessive_defer_occured;
-    wire  [3:0] w_retry_cnt;
+    reg   [3:0] w_retry_cnt;
 
     // CRC
     wire [31:0] w_crc;
@@ -123,7 +124,6 @@ module eth_tx_mac (
     reg         r_tx_done;
     reg         r_tx_retry;
     reg         r_tx_abort;
-    reg         r_tx_used_data;
     reg         r_will_transmit;
     reg         r_mtx_en;
     reg         r_mtx_err;
@@ -139,15 +139,10 @@ module eth_tx_mac (
     wire        w_packet_finished;
 
     //============================================================
-    // Reset Collision (synchronizer)
-    //============================================================
-    // Collision signal should be reset when not transmitting
-    assign w_reset_collision = ~(w_state_preamble | |w_state_data | w_state_pad | w_state_fcs);
-
-    //============================================================
     // Excessive Defer Detection
     //============================================================
     // Defer > 24KB (24576 bits = 6144 nibbles)
+    assign w_collision_active = ~i_full_duplex & i_collision;
     assign w_excessive_defer_occured = i_tx_start & w_state_defer & w_excessive_defer & ~r_stop_excessive_defer;
 
     // Stop excessive defer flag (set once, cleared when tx_start deasserted)
@@ -167,7 +162,7 @@ module eth_tx_mac (
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n)
             r_col_window <= 1'b1;
-        else if (!i_collision & (w_byte_cnt[5:0] == LPARAM_COLL_VALID) &
+        else if (!w_collision_active & (w_byte_cnt[5:0] == LPARAM_COLL_VALID) &
              (w_state_data[1] | w_state_pad & w_nib_cnt[0] | w_state_fcs & w_nib_cnt[0]))
             r_col_window <= 1'b0;
         else if (w_state_idle | w_state_ipg)
@@ -210,15 +205,15 @@ module eth_tx_mac (
     //============================================================
 
     // Start TX Done: FCS complete OR Data done (no CRC)
-    assign w_start_tx_done = ~i_collision &
+    assign w_start_tx_done = ~w_collision_active &
         (w_state_fcs & w_nib_eq7 |
          w_state_data[1] & i_tx_end & (~i_pad_en | i_pad_en & w_nibble_min_fl) & ~i_crc_en);
 
-    // Underrun: Data state + FIFO empty
-    assign w_under_run = w_state_data[0] & i_tx_underrun & ~i_collision;
+    // Underrun: data state + byte source empty/error
+    assign w_under_run = w_state_data[0] & i_tx_underrun & ~w_collision_active;
 
     // Too big: Frame exceeds MaxFL
-    assign w_too_big = ~i_collision & w_max_frame &
+    assign w_too_big = ~w_collision_active & w_max_frame &
         (w_state_data[0] & ~i_tx_underrun | w_state_fcs);
 
     // Start TX Retry: Jam in collision window, not max retry, not underrun
@@ -240,14 +235,6 @@ module eth_tx_mac (
     //============================================================
     // Status Output Registers
     //============================================================
-
-    // TX Used Data
-    always @(posedge i_clk or negedge i_rst_n) begin
-        if (!i_rst_n)
-            r_tx_used_data <= 1'b0;
-        else
-            r_tx_used_data <= |w_start_data;
-    end
 
     // TX Done
     always @(posedge i_clk or negedge i_rst_n) begin
@@ -331,8 +318,22 @@ module eth_tx_mac (
             r_mtx_d_d = i_tx_data[3:0];                      // Lower nibble
         else if (w_state_data[1])
             r_mtx_d_d = i_tx_data[7:4];                     // Higher nibble
-        else if (w_state_fcs)
-            r_mtx_d_d = ~w_crc[31:28];                      // CRC (inverted per IEEE)
+        else if (w_state_fcs) begin
+            // CRC module giu nguyen gia tri trong FCS.
+            // Ethernet FCS phat bit-reflect cua ~CRC, byte thap truoc.
+            // Vi eth_crc nhan nibble da dao bit, FCS cung phai dao bit
+            // trong tung nhom 4 bit khi dua ra MII.
+            case (w_nib_cnt[2:0])
+                3'd0: r_mtx_d_d = {~w_crc[28], ~w_crc[29], ~w_crc[30], ~w_crc[31]};
+                3'd1: r_mtx_d_d = {~w_crc[24], ~w_crc[25], ~w_crc[26], ~w_crc[27]};
+                3'd2: r_mtx_d_d = {~w_crc[20], ~w_crc[21], ~w_crc[22], ~w_crc[23]};
+                3'd3: r_mtx_d_d = {~w_crc[16], ~w_crc[17], ~w_crc[18], ~w_crc[19]};
+                3'd4: r_mtx_d_d = {~w_crc[12], ~w_crc[13], ~w_crc[14], ~w_crc[15]};
+                3'd5: r_mtx_d_d = {~w_crc[8],  ~w_crc[9],  ~w_crc[10], ~w_crc[11]};
+                3'd6: r_mtx_d_d = {~w_crc[4],  ~w_crc[5],  ~w_crc[6],  ~w_crc[7]};
+                default: r_mtx_d_d = {~w_crc[0],  ~w_crc[1],  ~w_crc[2],  ~w_crc[3]};
+            endcase
+        end
         else if (w_state_jam)
             r_mtx_d_d = 4'h9;                               // Jam pattern
         else if (w_state_preamble)
@@ -352,9 +353,12 @@ module eth_tx_mac (
     //============================================================
     // CRC Logic
     //============================================================
-    assign w_enable_crc = ~w_state_fcs;  // Enable during data, disable during FCS
+    // CRC chi tinh tren DA/SA/LEN/payload/pad.
+    // Khong tinh preamble, SFD, FCS, jam, IPG.
+    assign w_enable_crc = i_crc_en & ((|w_state_data) | w_state_pad);
 
-    // Data nibble being transmitted (LSB first for CRC)
+    // Data nibble being transmitted.
+    // Dao bit trong tung nibble de khop convention cua eth_crc.
     assign w_data_crc[0] = w_state_data[0] ? i_tx_data[3] : w_state_data[1] ? i_tx_data[7] : 1'b0;
     assign w_data_crc[1] = w_state_data[0] ? i_tx_data[2] : w_state_data[1] ? i_tx_data[6] : 1'b0;
     assign w_data_crc[2] = w_state_data[0] ? i_tx_data[1] : w_state_data[1] ? i_tx_data[5] : 1'b0;
@@ -400,7 +404,7 @@ module eth_tx_mac (
     );
 
     // TX State Machine (FSM)
-    eth_txstatem u_tx_fsm (
+    eth_tx_controller u_tx_fsm (
         .i_clk               (i_clk),
         .i_rst_n             (i_rst_n),
         .i_excessive_defer   (w_excessive_defer),
@@ -410,7 +414,7 @@ module eth_tx_mac (
         .i_tx_end            (i_tx_end),
         .i_tx_underrun       (i_tx_underrun),
         .i_tx_done           (w_start_tx_done),
-        .i_collision         (i_collision),
+        .i_collision         (w_collision_active),
         .i_underrun          (w_under_run),
         .i_col_window        (w_col_window),
         .i_retry_max         (w_retry_max),
@@ -479,7 +483,9 @@ module eth_tx_mac (
     assign o_tx_done        = r_tx_done;
     assign o_tx_retry       = r_tx_retry;
     assign o_tx_abort       = r_tx_abort;
-    assign o_tx_used_data   = r_tx_used_data;
+    // Bao controller doi sang byte tiep theo dung sau khi MAC chot nibble cao.
+    // Day la tin hieu combinational de controller cap byte moi truoc nibble thap ke tiep.
+    assign o_tx_used_data   = w_state_data[1] & ~i_tx_underrun & ~w_collision_active & ~w_too_big;
     assign o_will_transmit  = r_will_transmit;
     assign o_late_collision = w_late_collision;
     assign o_max_collision  = w_max_collision_occured;

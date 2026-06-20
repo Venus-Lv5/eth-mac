@@ -3,7 +3,7 @@
 // eth_rx_mac.v
 // RX MAC module - Combines RX FSM, counters, address check, and CRC
 // Based on ethmac eth_rxethmac.v
-// Simplified per DESIGN_NOTES.md: removed DlyCrcEn, HugEn, configurable MaxFL
+// Buffer-based version: removed DlyCrcEn, HugEn, configurable MaxFL
 // REMOVED: MII management, per-register PAD/CRC config
 
 module eth_rx_mac (
@@ -20,7 +20,8 @@ module eth_rx_mac (
     input wire              i_transmitting,    // TX MAC transmitting (collision in HDX)
     input wire              i_pro,             // PRO: Promiscuous mode
     input wire              i_bro,             // BRO: Broadcast enable
-    input wire              i_pass_ctrl,       // PASS_CTRL: Forward control frames
+    input wire              i_fil_en,          // FIL_EN: Multicast hash enable
+    input wire              i_pass_ctrl,       // Kept for old address-check compatibility
 
     // MAC address and hash table
     input wire [47:0]      i_mac_addr,        // This station MAC address
@@ -30,16 +31,16 @@ module eth_rx_mac (
     // Control frame address OK (for PAUSE frames)
     input wire              i_ctrl_addr_ok,    // Control frame address matched
 
-    // RX data output (to RX DMA/FIFO)
+    // RX data output (to RX buffer controller)
     output wire [7:0]      o_rx_data,        // Assembled byte data
     output wire             o_rx_valid,       // Data valid strobe
     output wire             o_rx_start,        // Start of frame
     output wire             o_rx_end,          // End of frame
 
-    // RX status (to RX DMA)
+    // RX status (to RX buffer controller/registers)
     output wire             o_rx_abort,        // Frame aborted (bad address/CRC)
     output wire             o_crc_err,         // CRC error detected
-    output wire             o_addr_miss,       // Address miss (for BD status)
+    output wire             o_addr_miss,       // Address miss/debug status
     output wire             o_rx_ready         // RX ready for next frame
 );
 
@@ -69,6 +70,7 @@ module eth_rx_mac (
     wire             w_rx_abort_addr;
     wire             w_multicast;
     wire             w_broadcast;
+    wire             w_ctrl_addr_ok;
 
     wire [31:0]     w_crc;
     wire             w_crc_err;
@@ -78,11 +80,13 @@ module eth_rx_mac (
     wire             w_rx_end_gen;
     wire             w_dribble_end;
 
-    wire             w_crc_hash_good;
-    wire [5:0]      w_crc_hash;
+    reg              r_crc_hash_good;
+    reg [5:0]        r_crc_hash;
 
     wire             w_crc_enable;
     wire             w_crc_init;
+    wire [3:0]       w_crc_data;
+    wire [7:0]       w_assembled_byte;
 
     reg [7:0]       r_latched_byte;
     reg [7:0]       r_rx_data_d;
@@ -95,6 +99,9 @@ module eth_rx_mac (
     reg             r_rx_end;
     reg             r_multicast;
     reg             r_broadcast;
+    reg             r_pause_da_ok;
+
+    localparam [47:0] PAUSE_DA = 48'h0180C2000001;
 
     //============================================================
     // RX FSM Controller
@@ -114,6 +121,9 @@ module eth_rx_mac (
         .o_state_preamble   (w_st_preamble),
         .o_state_sfd        (w_st_sfd),
         .o_state_data       (w_st_data),
+        .o_start_preamble   (),
+        .o_start_sfd        (),
+        .o_start_data       (),
         .o_rx_abort         (w_rx_abort_fsm)
     );
 
@@ -142,6 +152,7 @@ module eth_rx_mac (
         .o_byte_eq_6        (w_byte_eq_6),
         .o_byte_eq_7        (w_byte_eq_7),
         .o_byte_gt_2        (w_byte_gt_2),
+        .o_byte_lt_7        (),
         .o_byte_max_frame   (w_byte_max_frame)
     );
 
@@ -150,13 +161,19 @@ module eth_rx_mac (
     //============================================================
     // Enable CRC when in data state and not at max frame
     assign w_crc_enable = i_rx_dv & (|w_st_data) & ~w_byte_max_frame;
-    // Initialize CRC when entering SFD
-    assign w_crc_init = w_st_sfd & i_rx_dv;
+    // Khoi tao CRC tai nibble D cua SFD.
+    assign w_crc_init = w_st_sfd & i_rx_dv & (i_rx_data == 4'hD);
+
+    // Dao bit trong tung nibble de khop convention cua eth_crc.
+    assign w_crc_data[0] = i_rx_data[3];
+    assign w_crc_data[1] = i_rx_data[2];
+    assign w_crc_data[2] = i_rx_data[1];
+    assign w_crc_data[3] = i_rx_data[0];
 
     eth_crc u_crc (
         .i_clk      (i_clk),
         .i_rst_n    (i_rst_n),
-        .i_data     (i_rx_data),
+        .i_data     (w_crc_data),
         .i_enable   (w_crc_enable),
         .i_init     (w_crc_init),
         .o_crc      (w_crc),
@@ -164,29 +181,31 @@ module eth_rx_mac (
     );
 
     //============================================================
-    // CRC Hash for Multicast (captured after byte 6)
+    // CRC Hash for Multicast (captured after destination address)
     //============================================================
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n)
-            w_crc_hash_good <= 1'b0;
+            r_crc_hash_good <= 1'b0;
         else
-            w_crc_hash_good <= w_st_data[0] & w_byte_eq_6;
+            r_crc_hash_good <= w_st_data[0] & w_byte_eq_6;
     end
 
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n)
-            w_crc_hash[5:0] <= 6'h0;
+            r_crc_hash[5:0] <= 6'h0;
         else if (w_st_idle)
-            w_crc_hash[5:0] <= 6'h0;
+            r_crc_hash[5:0] <= 6'h0;
         else if (w_st_data[0] & w_byte_eq_6)
-            w_crc_hash[5:0] <= w_crc[31:26];
+            r_crc_hash[5:0] <= w_crc[31:26];
     end
 
     //============================================================
     // Nibble-to-Byte Assembly
     //============================================================
-    // MII is 4-bit interface, need to assemble 2 nibbles into 1 byte
-    // Latch MSB nibble first, then shift in LSB nibble
+    // MII is 4-bit interface, need to assemble 2 nibbles into 1 byte.
+    // PHY gives low nibble first, then high nibble.
+    assign w_assembled_byte = {i_rx_data[3:0], r_latched_byte[7:4]};
+
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n)
             r_latched_byte[7:0] <= 8'h0;
@@ -198,7 +217,7 @@ module eth_rx_mac (
         if (!i_rst_n)
             r_delay_data <= 1'b0;
         else
-            r_delay_data <= w_st_data[0];
+            r_delay_data <= w_st_data[1];
     end
 
     //============================================================
@@ -209,7 +228,7 @@ module eth_rx_mac (
             r_rx_data_d[7:0] <= 8'h0;
         end else begin
             if (w_rx_valid_gen)
-                r_rx_data_d[7:0] <= r_latched_byte[7:0] & {8{|w_st_data}};
+                r_rx_data_d[7:0] <= w_assembled_byte;
             else if (~r_delay_data)
                 r_rx_data_d[7:0] <= 8'h0;
         end
@@ -220,7 +239,7 @@ module eth_rx_mac (
     //============================================================
     // RxValid Generation
     //============================================================
-    assign w_rx_valid_gen = w_st_data[0];
+    assign w_rx_valid_gen = w_st_data[1];
 
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
@@ -237,7 +256,7 @@ module eth_rx_mac (
     //============================================================
     // RxStart Generation
     //============================================================
-    assign w_rx_start_gen = w_st_data[0] & w_byte_eq_1;
+    assign w_rx_start_gen = w_st_data[1] & w_byte_eq_0;
 
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
@@ -279,9 +298,9 @@ module eth_rx_mac (
         if (!i_rst_n)
             r_broadcast <= 1'b0;
         else begin
-            if (w_st_data[0] & ~(&r_latched_byte[7:0]) & w_byte_cnt < 16'd7)
+            if (w_st_data[1] & ~(&w_assembled_byte) & w_byte_cnt < 16'd6)
                 r_broadcast <= 1'b0;
-            else if (w_st_data[0] & (&r_latched_byte[7:0]) & w_byte_eq_1)
+            else if (w_st_data[1] & (&w_assembled_byte) & w_byte_eq_0)
                 r_broadcast <= 1'b1;
             else if (o_rx_end | w_rx_abort_addr)
                 r_broadcast <= 1'b0;
@@ -298,7 +317,7 @@ module eth_rx_mac (
         if (!i_rst_n)
             r_multicast <= 1'b0;
         else begin
-            if (w_st_data[0] & w_byte_eq_1 & r_latched_byte[0])
+            if (w_st_data[1] & w_byte_eq_0 & w_assembled_byte[0])
                 r_multicast <= 1'b1;
             else if (o_rx_end | w_rx_abort_addr)
                 r_multicast <= 1'b0;
@@ -308,16 +327,48 @@ module eth_rx_mac (
     assign w_multicast = r_multicast;
 
     //============================================================
+    // PAUSE control address detection
+    //============================================================
+    // PAUSE DA 01-80-C2-00-00-01 can be accepted for internal
+    // pause handling even when normal multicast hash does not match.
+    always @(posedge i_clk or negedge i_rst_n) begin
+        if (!i_rst_n)
+            r_pause_da_ok <= 1'b0;
+        else if (o_rx_end | w_rx_abort_addr | w_st_idle)
+            r_pause_da_ok <= 1'b0;
+        else if (w_st_data[1] & w_byte_eq_0)
+            r_pause_da_ok <= (w_assembled_byte == PAUSE_DA[47:40]);
+        else if (w_st_data[1] & w_byte_eq_1)
+            r_pause_da_ok <= r_pause_da_ok &
+                             (w_assembled_byte == PAUSE_DA[39:32]);
+        else if (w_st_data[1] & w_byte_eq_2)
+            r_pause_da_ok <= r_pause_da_ok &
+                             (w_assembled_byte == PAUSE_DA[31:24]);
+        else if (w_st_data[1] & w_byte_eq_3)
+            r_pause_da_ok <= r_pause_da_ok &
+                             (w_assembled_byte == PAUSE_DA[23:16]);
+        else if (w_st_data[1] & w_byte_eq_4)
+            r_pause_da_ok <= r_pause_da_ok &
+                             (w_assembled_byte == PAUSE_DA[15:8]);
+        else if (w_st_data[1] & w_byte_eq_5)
+            r_pause_da_ok <= r_pause_da_ok &
+                             (w_assembled_byte == PAUSE_DA[7:0]);
+    end
+
+    assign w_ctrl_addr_ok = i_ctrl_addr_ok | r_pause_da_ok;
+
+    //============================================================
     // Address Checking
     //============================================================
     eth_rx_addr_check u_addr_check (
         .i_clk              (i_clk),
         .i_rst_n            (i_rst_n),
-        .i_rx_data          (r_latched_byte),
+        .i_rx_data          (w_assembled_byte),
         .i_multicast        (w_multicast),
         .i_broadcast        (w_broadcast),
         .i_st_data          (w_st_data),
         .i_byte_eq_0        (w_byte_eq_0),
+        .i_byte_eq_1        (w_byte_eq_1),
         .i_byte_eq_2        (w_byte_eq_2),
         .i_byte_eq_3        (w_byte_eq_3),
         .i_byte_eq_4        (w_byte_eq_4),
@@ -327,13 +378,14 @@ module eth_rx_mac (
         .i_mac_addr         (i_mac_addr),
         .i_hash0            (i_hash0),
         .i_hash1            (i_hash1),
-        .i_crc_hash         (w_crc_hash),
-        .i_crc_hash_good    (w_crc_hash_good),
+        .i_crc_hash         (r_crc_hash),
+        .i_crc_hash_good    (r_crc_hash_good),
         .i_rx_end_frm       (o_rx_end),
         .i_pro              (i_pro),
         .i_bro              (i_bro),
+        .i_fil_en           (i_fil_en),
         .i_pass_ctrl        (i_pass_ctrl),
-        .i_ctrl_addr_ok     (i_ctrl_addr_ok),
+        .i_ctrl_addr_ok     (w_ctrl_addr_ok),
         .o_rx_abort         (w_rx_abort_addr),
         .o_addr_miss        (o_addr_miss)
     );

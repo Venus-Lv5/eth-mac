@@ -1,0 +1,63 @@
+###########################################################
+####               ICTC Regression Report              ####
+###########################################################
+Total testcase run: 52
+Passed            : 52
+Failed            : 0
+Unknown           : 0
+Used time         : 2m 20s
+-----------------------------------------------------------
+Run log detail:
+log/full_100M_normal_bro_test_324673.log: => Passed
+log/full_100M_normal_bro_test_768824.log: => Passed
+log/full_100M_normal_multi_test_421913.log: => Passed
+log/full_100M_normal_multi_test_665833.log: => Passed
+log/full_100M_normal_pro_test_304837.log: => Passed
+log/full_100M_normal_pro_test_856633.log: => Passed
+log/full_100M_normal_uni_test_255751.log: => Passed
+log/full_100M_normal_uni_test_545441.log: => Passed
+log/full_100M_rx_pause_test_101228.log: => Passed
+log/full_100M_rx_pause_test_906135.log: => Passed
+log/full_100M_tx_pause_test_770870.log: => Passed
+log/full_100M_tx_pause_test_825020.log: => Passed
+log/full_10M_normal_bro_test_410419.log: => Passed
+log/full_10M_normal_bro_test_814197.log: => Passed
+log/full_10M_normal_multi_test_564243.log: => Passed
+log/full_10M_normal_multi_test_950911.log: => Passed
+log/full_10M_normal_pro_test_372849.log: => Passed
+log/full_10M_normal_pro_test_424843.log: => Passed
+log/full_10M_normal_uni_test_312548.log: => Passed
+log/full_10M_normal_uni_test_553605.log: => Passed
+log/full_10M_rx_pause_test_342691.log: => Passed
+log/full_10M_rx_pause_test_818076.log: => Passed
+log/full_10M_tx_pause_test_157521.log: => Passed
+log/full_10M_tx_pause_test_835041.log: => Passed
+log/int_rx_avail_100M_test_169300.log: => Passed
+log/int_rx_avail_100M_test_486331.log: => Passed
+log/int_rx_avail_10M_test_810223.log: => Passed
+log/int_rx_avail_10M_test_995096.log: => Passed
+log/int_rx_busy_100M_test_461353.log: => Passed
+log/int_rx_busy_100M_test_728796.log: => Passed
+log/int_rx_busy_10M_test_139372.log: => Passed
+log/int_rx_busy_10M_test_809571.log: => Passed
+log/int_rx_err_100M_test_444658.log: => Passed
+log/int_rx_err_100M_test_790878.log: => Passed
+log/int_rx_err_10M_test_190201.log: => Passed
+log/int_rx_err_10M_test_599242.log: => Passed
+log/int_rx_pause_seen_100M_test_516172.log: => Passed
+log/int_rx_pause_seen_100M_test_978502.log: => Passed
+log/int_rx_pause_seen_10M_test_309301.log: => Passed
+log/int_rx_pause_seen_10M_test_568889.log: => Passed
+log/int_tx_done_100M_test_358794.log: => Passed
+log/int_tx_done_100M_test_623312.log: => Passed
+log/int_tx_done_10M_test_187329.log: => Passed
+log/int_tx_done_10M_test_728721.log: => Passed
+log/int_tx_err_100M_test_434832.log: => Passed
+log/int_tx_err_100M_test_459781.log: => Passed
+log/int_tx_err_10M_test_489183.log: => Passed
+log/int_tx_err_10M_test_608489.log: => Passed
+log/reg_default_test_254659.log: => Passed
+log/reg_default_test_669051.log: => Passed
+log/reg_rw_test_776468.log: => Passed
+log/reg_rw_test_958149.log: => Passed
+-----------------------------------------------------------
